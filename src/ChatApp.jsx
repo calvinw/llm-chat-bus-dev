@@ -40,10 +40,315 @@ const MODELS = [
 
 // Dummy initial messages
 const INITIAL_MESSAGES = [
-  { role: 'user', content: 'Hello, how are you?' },
-  { role: 'assistant', content: 'Hi! I am doing well, thank you for asking. How can I help you today?' },
-  { role: 'user', content: 'Can you explain React hooks?' },
-  { role: 'assistant', content: 'React hooks are functions that let you use state and other React features in functional components. The most common hooks are:\n\n- **useState**: Manages local state\n- **useEffect**: Handles side effects\n- **useContext**: Accesses context values\n- **useRef**: Creates mutable references\n\nWould you like me to explain any of these in more detail?' },
+  { role: 'user', content: 'Hello, can you show me some markdown examples?' },
+  { role: 'assistant', content: `# Markdown Rendering Test
+
+Welcome! Here are various markdown examples to test the rendering:
+
+## Text Formatting
+
+You can make text **bold**, *italic*, or ***both***. You can also use ~~strikethrough~~ and \`inline code\`.
+
+## Lists
+
+### Unordered Lists
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
+
+### Ordered Lists
+1. First step
+2. Second step
+3. Third step
+
+### Task Lists
+- [x] Completed task
+- [ ] Pending task
+- [ ] Another pending task
+
+## Code Blocks
+
+### JavaScript Example
+\`\`\`javascript
+function greet(name) {
+  const message = \`Hello, \${name}!\`;
+  console.log(message);
+  return message;
+}
+
+// Arrow function example
+const add = (a, b) => a + b;
+\`\`\`
+
+### Python Example
+\`\`\`python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# Print first 10 Fibonacci numbers
+for i in range(10):
+    print(f"F({i}) = {fibonacci(i)}")
+\`\`\`
+
+### CSS Example
+\`\`\`css
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.button {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+}
+\`\`\`
+
+## Blockquotes
+
+> This is a blockquote.
+> It can span multiple lines.
+>
+> — Someone famous
+
+## Tables
+
+| Feature | Status | Priority |
+|---------|--------|----------|
+| Chat UI | ✅ Done | High |
+| Settings | ✅ Done | Medium |
+| Tools | 🚧 In Progress | High |
+| MCP | 📋 Planned | Low |
+
+## Links and Images
+
+[Visit GitHub](https://github.com) for more info!
+
+## Horizontal Rules
+
+---
+
+## Emojis
+
+✅ 🎉 🚀 🔥 💡 📝 ❌ ⚠️
+
+## Mathematical Expressions
+
+Inline math: The formula for the area of a circle is $A = \\pi r^2$.
+
+Block math:
+$$
+e^{i\\pi} + 1 = 0
+$$
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+## Nested Lists
+
+1. Level 1 item
+   - Level 2 item
+     - Level 3 item
+       - Level 4 item
+2. Another Level 1
+   - Nested item
+
+## Combining Elements
+
+### Tips for Writing Good Code
+
+1. **Keep it simple**
+   - Use clear variable names
+   - Write short functions
+   - Add comments when needed
+
+2. **Follow conventions**
+   - Stick to style guides
+   - Use consistent formatting
+
+3. **Test your code**
+   - Write unit tests
+   - Test edge cases
+   - Use descriptive test names
+
+\`\`\`javascript
+// Example of good code
+const calculateTotal = (items) => {
+  return items.reduce((sum, item) => sum + item.price, 0);
+};
+\`\`\`
+
+---
+
+Let me know if you'd like to see more examples!` },
+
+  { role: 'user', content: 'That\'s great! Can you show me how to use the chat interface?' },
+  { role: 'assistant', content: `# How to Use This Chat Interface
+
+## Getting Started
+
+1. **Enter your API Key** - Click the **Settings** button and enter your OpenRouter API key
+2. **Select a Model** - Choose from available models like GPT-4o, Claude 3.5 Sonnet, etc.
+3. **Start Chatting** - Type your message and press Enter
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| \`Enter\` | Send message |
+| \`Shift + Enter\` | New line |
+| \`Backspace\` | Remove last attachment |
+
+## Features
+
+### ✨ Streaming Responses
+Watch responses appear in real-time as they're generated!
+
+### 🔧 Model Selection
+Switch between different AI models easily:
+- **GPT-4o Mini** - Fast and affordable
+- **GPT-4o** - Most capable
+- **Claude 3.5 Sonnet** - Great for coding
+- **Gemini Pro 1.5** - Google's model
+- **DeepSeek Chat** - Budget friendly
+
+### 💾 Persistent Settings
+Your API key and model selection are saved automatically!
+
+---
+
+Try sending a message to see it in action! 🚀` },
+
+  { role: 'user', content: 'What about code examples with syntax highlighting?' },
+  { role: 'assistant', content: `## Syntax Highlighting Examples
+
+Here are code examples in various programming languages:
+
+### React/JSX
+\`\`\`jsx
+import { useState } from 'react';
+
+function Counter({ initial = 0 }) {
+  const [count, setCount] = useState(initial);
+
+  return (
+    <div className="counter">
+      <h2>Count: {count}</h2>
+      <button onClick={() => setCount(c => c + 1)}>
+        Increment
+      </button>
+      <button onClick={() => setCount(0)}>
+        Reset
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+### TypeScript
+\`\`\`typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'guest';
+}
+
+async function fetchUser(id: number): Promise<User> {
+  const response = await fetch(\`/api/users/\${id}\`);
+  if (!response.ok) {
+    throw new Error('User not found');
+  }
+  return response.json();
+}
+\`\`\`
+
+### Rust
+\`\`\`rust
+fn fibonacci(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+
+fn main() {
+    for i in 0..10 {
+        println!("fib({}) = {}", i, fibonacci(i));
+    }
+}
+\`\`\`
+
+### Go
+\`\`\`go
+package main
+
+import "fmt"
+
+func fibonacci(n int) int {
+    if n <= 1 {
+        return n
+    }
+    return fibonacci(n-1) + fibonacci(n-2)
+}
+
+func main() {
+    for i := 0; i < 10; i++ {
+        fmt.Printf("fib(%d) = %d\\n", i, fibonacci(i))
+    }
+}
+\`\`\`
+
+### SQL
+\`\`\`sql
+-- Complex query with joins and aggregations
+SELECT
+    u.name,
+    u.email,
+    COUNT(o.id) as order_count,
+    SUM(o.total) as total_spent
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+WHERE o.created_at >= '2024-01-01'
+GROUP BY u.id, u.name, u.email
+HAVING COUNT(o.id) > 5
+ORDER BY total_spent DESC
+LIMIT 10;
+\`\`\`
+
+### Bash/Shell
+\`\`\`bash
+#!/bin/bash
+
+# Deploy script
+set -e
+
+echo "Starting deployment..."
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+
+# Deploy to server
+rsync -avz dist/ user@server:/var/www/html/
+
+echo "Deployment complete!"
+\`\`\`
+
+---
+
+All code blocks support full syntax highlighting! 🎨` },
 ];
 
 export default function ChatApp() {
@@ -194,8 +499,8 @@ export default function ChatApp() {
       </header>
 
       {/* Conversation Area */}
-      <div className="flex-1 overflow-hidden">
-        <Conversation>
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <Conversation className="h-full">
           <ConversationContent>
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center text-center">
