@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
+
 /**
  * Custom hook for managing AI models
- * Handles fetching models from OpenRouter API or using custom models
+ * Handles fetching models from OpenRouter API
  */
-
-import { OpenRouterClient } from '../utils/apiClient.jsx';
-
-const useModelManager = (customModels, apiKey) => {
+export function useModelManager(apiKey) {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,53 +17,66 @@ const useModelManager = (customModels, apiKey) => {
         setLoading(true);
         setError(null);
 
-        if (customModels) {
-          // Use provided custom models
-          if (isMounted) {
-            setModels(customModels);
-            setLoading(false);
+        // Fetch all models from OpenRouter API
+        const response = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': window.location.href,
+            'X-Title': 'FIT Retail Index Chat'
           }
-          return;
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch models: ${response.status}`);
         }
 
-        // Fetch all models from OpenRouter API like original
-        const client = new OpenRouterClient(apiKey || 'dummy');
-        const fetchedModels = await client.getModels();
-        
-        // Sort models alphabetically like original
+        const data = await response.json();
+        const fetchedModels = data.data || [];
+
+        // Sort models alphabetically
         const sortedModels = fetchedModels.sort((a, b) => a.id.localeCompare(b.id));
 
         if (isMounted) {
           setModels(sortedModels);
           setLoading(false);
-          console.log(`Loaded ${sortedModels.length} models`);
+          console.log(`Loaded ${sortedModels.length} models from OpenRouter`);
         }
       } catch (err) {
         console.error('Failed to fetch models:', err);
         if (isMounted) {
           setError(err);
           setLoading(false);
-          // Fallback to default model if API call fails
+          // Fallback to default models if API call fails
           setModels([
-            { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', description: 'Fallback model when API is unavailable' }
+            { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+            { id: 'openai/gpt-4o', name: 'GPT-4o' },
+            { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
           ]);
         }
       }
     };
 
-    fetchModels();
+    // Only fetch if we have an API key
+    if (apiKey) {
+      fetchModels();
+    } else {
+      setLoading(false);
+      // Use fallback models when no API key
+      setModels([
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+        { id: 'openai/gpt-4o', name: 'GPT-4o' },
+        { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
+      ]);
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [customModels, apiKey]);
-
+  }, [apiKey]);
 
   return {
     models,
     loading,
     error
   };
-};
-
-export default useModelManager;
+}
