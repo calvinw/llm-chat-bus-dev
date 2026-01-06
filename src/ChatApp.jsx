@@ -409,7 +409,7 @@ export default function ChatApp() {
       <header className="flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="size-5" />
-          <h1 className="text-xl font-semibold">AI Chat</h1>
+          <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
             {selectedModelName}
           </span>
