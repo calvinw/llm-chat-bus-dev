@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "httpUrl": "https://www.shadcn.io/api/mcp"
+    },
+    "ai-elements": {
+      "httpUrl": "https://registry.ai-sdk.dev/api/mcp"
+    }
+  }
+}
