@@ -19,6 +19,9 @@ function InputGroup({
       className={cn(
         "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center rounded-md border outline-none transition-[color,box-shadow]",
         "h-9 has-[>textarea]:h-auto",
+        // Always show a visible border
+        "border-gray-300 dark:border-gray-600",
+        "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20",
         // Variants based on alignment.
         "has-[>[data-align=inline-start]]:[&>input]:pl-2",
         "has-[>[data-align=inline-end]]:[&>input]:pr-2",

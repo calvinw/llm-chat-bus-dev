@@ -53,7 +53,7 @@ export const Message = ({
 }) => (
   <div
     className={cn(
-      "group flex w-full max-w-[95%] flex-col gap-2",
+      "group flex w-full max-w-[95%] flex-col gap-1",
       from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
       className
     )}

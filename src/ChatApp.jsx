@@ -17,6 +17,7 @@ import {
   PromptInputTextarea,
   PromptInputSubmit,
 } from '@/components/ai-elements/prompt-input';
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,49 @@ import { Label } from '@/components/ui/label';
 import { MessageSquare, RotateCcw, Settings } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
+
+/**
+ * Tool definition for adding two numbers
+ */
+const addNumbersTool = {
+  type: "function",
+  function: {
+    name: "add_numbers",
+    description: "Add two numbers together and return the result. Supports decimal numbers.",
+    parameters: {
+      type: "object",
+      properties: {
+        a: {
+          type: "number",
+          description: "The first number"
+        },
+        b: {
+          type: "number",
+          description: "The second number"
+        }
+      },
+      required: ["a", "b"]
+    }
+  }
+};
+
+/**
+ * Tool handler implementation
+ */
+const addNumbersHandler = ({ a, b }) => {
+  const result = a + b;
+  return {
+    summary: `${a} + ${b} = ${result}`,
+    a: a,
+    b: b,
+    result: result
+  };
+};
+
+const tools = [addNumbersTool];
+const toolHandlers = {
+  add_numbers: addNumbersHandler
+};
 
 // Welcome message
 const WELCOME_MESSAGE = {
@@ -43,6 +87,7 @@ This is a powerful AI chat interface built with **shadcn AI Elements** and **Ope
 - ✨ **Streaming Responses** - Watch responses appear in real-time
 - 🎨 **Rich Markdown** - Beautiful rendering with code highlighting, tables, and math
 - 🔧 **Multiple Models** - Switch between GPT-4o, Claude, Gemini, and more
+- 🔨 **Tool Support** - Try asking "What is 123.45 + 67.89?"
 - 💾 **Persistent Settings** - Your API key and model are saved automatically
 
 ---
@@ -55,11 +100,17 @@ const SUGGESTED_PROMPTS = [
   'Show me examples of markdown rendering with code blocks, math expressions, lists, tables, and other formatting.',
   'Can you explain conjoint analysis using math notation',
   'Can you give me 5 example SQL scripts',
+  'What is 123.45 + 67.89?',
+  'Can you describe your tools to me',
 ];
 
 export default function ChatApp() {
-  // Use the OpenRouter chat hook with welcome message
-  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat([WELCOME_MESSAGE]);
+  // Use the OpenRouter chat hook with welcome message and tools
+  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
+    [WELCOME_MESSAGE],
+    tools,
+    toolHandlers
+  );
 
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -101,6 +152,19 @@ export default function ChatApp() {
   };
 
   const selectedModelName = selectedModel;
+
+  // Render tool parts if present
+  const renderToolPart = (part) => {
+    return (
+      <Tool key={part.toolCallId} defaultOpen={part.state === 'output-error'} className="my-1">
+        <ToolHeader type={part.type} state={part.state} />
+        <ToolContent>
+          {part.input && <ToolInput input={part.input} />}
+          <ToolOutput output={part.output} errorText={part.errorText} />
+        </ToolContent>
+      </Tool>
+    );
+  };
 
   return (
     <div className="flex h-screen w-full flex-col">
@@ -218,7 +282,14 @@ export default function ChatApp() {
               messages.map((message, index) => (
                 <Message key={index} from={message.role}>
                   <MessageContent>
-                    <MessageResponse>{message.content}</MessageResponse>
+                    {/* Render text content - skip for tool messages */}
+                    {message.role !== 'tool' && message.content && <MessageResponse>{message.content}</MessageResponse>}
+
+                    {/* Render tool parts - only show tool results (output or error), not assistant tool calls */}
+                    {message.parts?.filter(p =>
+                      p.type?.startsWith('tool-') &&
+                      (p.state === 'output-available' || p.state === 'output-error')
+                    ).map(renderToolPart)}
                   </MessageContent>
                 </Message>
               ))
