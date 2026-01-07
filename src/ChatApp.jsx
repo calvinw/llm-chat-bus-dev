@@ -100,7 +100,7 @@ export default function ChatApp() {
     clearMessages();
   };
 
-  const selectedModelName = models.find(m => m.id === selectedModel)?.name || selectedModel;
+  const selectedModelName = selectedModel;
 
   return (
     <div className="flex h-screen w-full flex-col">
@@ -175,7 +175,7 @@ export default function ChatApp() {
                       >
                         {models.map(model => (
                           <option key={model.id} value={model.id}>
-                            {model.name || model.id}
+                            {model.id}
                           </option>
                         ))}
                       </select>
