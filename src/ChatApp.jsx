@@ -57,6 +57,47 @@ const addNumbersTool = {
 };
 
 /**
+ * Tool definition for getting iframe state
+ */
+const getIframeStateTool = {
+  type: "function",
+  function: {
+    name: "get_iframe_state",
+    description: "Get the current state of dropdown selections in the iframe app. Returns the selected company and year values.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  }
+};
+
+/**
+ * Tool definition for setting iframe state
+ */
+const setIframeStateTool = {
+  type: "function",
+  function: {
+    name: "set_iframe_state",
+    description: "Set the dropdown selections in the iframe app. You can set the company and/or year values. Valid companies: Amazon, Costco, Walmart, Macy's. Valid years: 2018-2024.",
+    parameters: {
+      type: "object",
+      properties: {
+        company: {
+          type: "string",
+          description: "The company to select (Amazon, Costco, Walmart, or Macy's)"
+        },
+        year: {
+          type: "string",
+          description: "The year to select (2018-2024)"
+        }
+      },
+      required: []
+    }
+  }
+};
+
+/**
  * Tool handler implementation
  */
 const addNumbersHandler = ({ a, b }) => {
@@ -67,11 +108,6 @@ const addNumbersHandler = ({ a, b }) => {
     b: b,
     result: result
   };
-};
-
-const tools = [addNumbersTool];
-const toolHandlers = {
-  add_numbers: addNumbersHandler
 };
 
 // Welcome message
@@ -110,13 +146,6 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function ChatApp() {
-  // Use the OpenRouter chat hook with welcome message and tools
-  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
-    [WELCOME_MESSAGE],
-    tools,
-    toolHandlers
-  );
-
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
@@ -180,6 +209,51 @@ export default function ChatApp() {
       return false;
     }
   }, [iframeSrc]);
+
+  // Tool handlers
+  const toolHandlers = {
+    add_numbers: ({ a, b }) => {
+      const result = a + b;
+      return {
+        summary: `${a} + ${b} = ${result}`,
+        a: a,
+        b: b,
+        result: result
+      };
+    },
+    get_iframe_state: () => {
+      const state = getIframeState();
+      if (!state) {
+        return { error: 'Iframe not loaded or not accessible' };
+      }
+      return {
+        company: state.company || 'Not selected',
+        year: state.year || 'Not selected',
+        title: state.title
+      };
+    },
+    set_iframe_state: ({ company, year }) => {
+      const success = setIframeState({ company, year });
+      if (!success) {
+        return { error: 'Failed to set iframe state. Iframe may not be loaded.' };
+      }
+      return {
+        success: true,
+        company: company || 'unchanged',
+        year: year || 'unchanged'
+      };
+    }
+  };
+
+  // Tools array
+  const tools = [addNumbersTool, getIframeStateTool, setIframeStateTool];
+
+  // Use the OpenRouter chat hook with welcome message and tools
+  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
+    [WELCOME_MESSAGE],
+    tools,
+    toolHandlers
+  );
 
   // Fetch models from OpenRouter API
   const { models, loading: modelsLoading } = useModelManager(apiKey);
