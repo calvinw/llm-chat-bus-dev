@@ -123,7 +123,7 @@ export default function ChatApp() {
 
   // Iframe panel state
   const [iframeSrc, setIframeSrc] = useState(() => {
-    return localStorage.getItem('chatapp_iframe_src') || '/sample-dropdown.html';
+    return localStorage.getItem('chatapp_iframe_src') || './sample-dropdown.html';
   });
   const iframeRef = useRef(null);
 
