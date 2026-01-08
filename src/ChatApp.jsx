@@ -57,13 +57,13 @@ const addNumbersTool = {
 };
 
 /**
- * Tool definition for getting iframe state
+ * Tool definition for getting selected company and year
  */
-const getIframeStateTool = {
+const getSelectedCompanyTool = {
   type: "function",
   function: {
-    name: "get_iframe_state",
-    description: "Get the current state of dropdown selections in the iframe app. Returns the selected company and year values.",
+    name: "get_selected_company",
+    description: "Get the current company and year selections from the iframe app dropdowns. Returns both the selected company and year values.",
     parameters: {
       type: "object",
       properties: {},
@@ -73,13 +73,13 @@ const getIframeStateTool = {
 };
 
 /**
- * Tool definition for setting iframe state
+ * Tool definition for setting selected company and year
  */
-const setIframeStateTool = {
+const setSelectedCompanyTool = {
   type: "function",
   function: {
-    name: "set_iframe_state",
-    description: "Set the dropdown selections in the iframe app. You can set the company and/or year values. Valid companies: Amazon, Costco, Walmart, Macy's. Valid years: 2018-2024.",
+    name: "set_selected_company",
+    description: "Set the company and/or year dropdown selections in the iframe app. Valid companies: Amazon, Costco, Walmart, Macy's. Valid years: 2018-2024.",
     parameters: {
       type: "object",
       properties: {
@@ -221,7 +221,7 @@ export default function ChatApp() {
         result: result
       };
     },
-    get_iframe_state: () => {
+    get_selected_company: () => {
       const state = getIframeState();
       if (!state) {
         return { error: 'Iframe not loaded or not accessible' };
@@ -232,7 +232,7 @@ export default function ChatApp() {
         title: state.title
       };
     },
-    set_iframe_state: ({ company, year }) => {
+    set_selected_company: ({ company, year }) => {
       const success = setIframeState({ company, year });
       if (!success) {
         return { error: 'Failed to set iframe state. Iframe may not be loaded.' };
@@ -246,7 +246,7 @@ export default function ChatApp() {
   };
 
   // Tools array
-  const tools = [addNumbersTool, getIframeStateTool, setIframeStateTool];
+  const tools = [addNumbersTool, getSelectedCompanyTool, setSelectedCompanyTool];
 
   // Use the OpenRouter chat hook with welcome message and tools
   const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
