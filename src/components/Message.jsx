@@ -42,17 +42,19 @@ const Message = forwardRef(({ message, renderMessage, index, isStreaming, displa
     };
 
     return (
-      <Tool defaultOpen={false}>
-        <ToolHeader
-          title={toolCall.name}
-          type={`tool-${toolCall.name}`}
-          state="output-available"
-        />
-        <ToolContent>
-          <ToolInput input={getFullDisplayArgs()} />
-          <ToolOutput output={toolResult} />
-        </ToolContent>
-      </Tool>
+      <div className="w-full max-w-[95%]">
+        <Tool defaultOpen={false}>
+          <ToolHeader
+            title={toolCall.name}
+            type={`tool-${toolCall.name}`}
+            state="output-available"
+          />
+          <ToolContent>
+            <ToolInput input={getFullDisplayArgs()} />
+            <ToolOutput output={toolResult} />
+          </ToolContent>
+        </Tool>
+      </div>
     );
   }
 

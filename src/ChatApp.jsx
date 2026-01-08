@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -22,9 +22,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, RotateCcw, Settings } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
+import {
+  Panel,
+  Group,
+  Separator,
+} from 'react-resizable-panels';
 
 /**
  * Tool definition for adding two numbers
@@ -116,6 +121,66 @@ export default function ChatApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
 
+  // Iframe panel state
+  const [iframeSrc, setIframeSrc] = useState(() => {
+    return localStorage.getItem('chatapp_iframe_src') || '/sample-dropdown.html';
+  });
+  const iframeRef = useRef(null);
+
+  // Iframe bridge - provides access to the iframe DOM
+  const getIframeState = useCallback(() => {
+    if (!iframeRef.current || !iframeSrc) return null;
+
+    try {
+      const doc = iframeRef.current.contentWindow?.document;
+      if (!doc) return null;
+
+      // Get dropdown values from sample page
+      const companySelect = doc.querySelector('#company-select');
+      const yearSelect = doc.querySelector('#year-select');
+
+      return {
+        company: companySelect?.value || '',
+        year: yearSelect?.value || '',
+        title: doc.title,
+        url: iframeRef.current.contentWindow?.location?.href,
+      };
+    } catch (e) {
+      console.error('Error accessing iframe:', e);
+      return null;
+    }
+  }, [iframeSrc]);
+
+  const setIframeState = useCallback((config) => {
+    if (!iframeRef.current || !iframeSrc) return false;
+
+    try {
+      const doc = iframeRef.current.contentWindow?.document;
+      if (!doc) return false;
+
+      const setSelectValue = (selector, value) => {
+        const el = doc.querySelector(selector);
+        if (el) {
+          const optionExists = Array.from(el.options).some(opt => opt.value === value);
+          if (optionExists) {
+            el.value = value;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (config.company) setSelectValue('#company-select', config.company);
+      if (config.year) setSelectValue('#year-select', config.year);
+
+      return true;
+    } catch (e) {
+      console.error('Error setting iframe state:', e);
+      return false;
+    }
+  }, [iframeSrc]);
+
   // Fetch models from OpenRouter API
   const { models, loading: modelsLoading } = useModelManager(apiKey);
 
@@ -167,168 +232,213 @@ export default function ChatApp() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between border-b px-6 py-4">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="size-5" />
-          <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearConversation}
-            disabled={messages.length === 0}
-          >
-            <RotateCcw className="size-4 mr-2" />
-            New Chat
-          </Button>
-          <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Settings className="size-4 mr-2" />
-                Settings
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <Group orientation="horizontal" style={{ width: '100%', height: '100%' }}>
+        {/* Iframe Panel */}
+        <Panel defaultSize={iframeSrc ? 50 : 0} minSize={iframeSrc ? 20 : 0}>
+          {iframeSrc && (
+            <div style={{ height: '100%' }}>
+              <iframe
+                ref={iframeRef}
+                src={iframeSrc}
+                className="w-full h-full border-0"
+                title="Side Panel"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+              />
+            </div>
+          )}
+        </Panel>
+
+        <Separator className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
+
+        {/* Main Chat Panel */}
+        <Panel defaultSize={iframeSrc ? 50 : 100} minSize={20}>
+        <div style={{ height: '100%' }} className="flex flex-col">
+          {/* Header */}
+          <header className="flex items-center justify-between border-b px-6 py-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="size-5" />
+              <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearConversation}
+                disabled={messages.length === 0}
+              >
+                <RotateCcw className="size-4 mr-2" />
+                New Chat
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <SheetHeader>
-                <SheetTitle>Settings</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-6 py-6">
-                {/* API Key Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">OpenRouter API Key</Label>
-                  <Input
-                    id="api-key"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => handleSaveApiKey(e.target.value)}
-                    placeholder="sk-or-..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Get your API key from{' '}
-                    <a
-                      href="https://openrouter.ai/keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-foreground"
-                    >
-                      openrouter.ai
-                    </a>
-                  </p>
-                  {apiKey && (
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      ✓ API key is set
-                    </p>
-                  )}
-                </div>
-
-                {/* Model Selector */}
-                <div className="space-y-2">
-                  <Label htmlFor="model">Model</Label>
-                  {modelsLoading ? (
-                    <p className="text-xs text-muted-foreground">Loading models...</p>
-                  ) : (
-                    <>
-                      <select
-                        id="model"
-                        value={selectedModel}
-                        onChange={(e) => handleSaveModel(e.target.value)}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {models.map(model => (
-                          <option key={model.id} value={model.id}>
-                            {model.id}
-                          </option>
-                        ))}
-                      </select>
+              <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="size-4 mr-2" />
+                    Settings
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Settings</SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-6 py-6">
+                    {/* API Key Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor="api-key">OpenRouter API Key</Label>
+                      <Input
+                        id="api-key"
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => handleSaveApiKey(e.target.value)}
+                        placeholder="sk-or-..."
+                      />
                       <p className="text-xs text-muted-foreground">
-                        {models.length} models available • Selected: {selectedModelName}
+                        Get your API key from{' '}
+                        <a
+                          href="https://openrouter.ai/keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline hover:text-foreground"
+                        >
+                          openrouter.ai
+                        </a>
                       </p>
-                    </>
-                  )}
-                </div>
+                      {apiKey && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          ✓ API key is set
+                        </p>
+                      )}
+                    </div>
 
-                {/* Info Box */}
-                <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                  <p className="font-medium mb-1">Current Configuration:</p>
-                  <ul className="space-y-1">
-                    <li>• API Key: {apiKey ? '✓ Set' : '✗ Not set'}</li>
-                    <li>• Model: {selectedModelName}</li>
-                  </ul>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+                    {/* Model Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="model">Model</Label>
+                      {modelsLoading ? (
+                        <p className="text-xs text-muted-foreground">Loading models...</p>
+                      ) : (
+                        <>
+                          <select
+                            id="model"
+                            value={selectedModel}
+                            onChange={(e) => handleSaveModel(e.target.value)}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {models.map(model => (
+                              <option key={model.id} value={model.id}>
+                                {model.id}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-muted-foreground">
+                            {models.length} models available • Selected: {selectedModelName}
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Iframe URL Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor="iframe-url">Iframe App URL</Label>
+                      <Input
+                        id="iframe-url"
+                        type="text"
+                        value={iframeSrc}
+                        onChange={(e) => {
+                          const newSrc = e.target.value;
+                          setIframeSrc(newSrc);
+                          localStorage.setItem('chatapp_iframe_src', newSrc);
+                        }}
+                        placeholder="./BusMgmtBenchmarks/company_to_company.html"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        URL to load in the left side panel. Must be same-origin for DOM access.
+                        Leave empty to hide the panel.
+                      </p>
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+                      <p className="font-medium mb-1">Current Configuration:</p>
+                      <ul className="space-y-1">
+                        <li>• API Key: {apiKey ? '✓ Set' : '✗ Not set'}</li>
+                        <li>• Model: {selectedModelName}</li>
+                        <li>• Iframe App: {iframeSrc ? '✓ Enabled' : '✗ Hidden'}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </header>
+
+          {/* Conversation Area */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Conversation className="h-full">
+              <ConversationContent>
+                {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-center">
+                    <div className="max-w-md space-y-2">
+                      <MessageSquare className="mx-auto size-12 text-muted-foreground" />
+                      <h2 className="text-lg font-semibold">Start a conversation</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Type a message below to test the UI
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((message, index) => (
+                    <Message key={index} from={message.role}>
+                      <MessageContent>
+                        {/* Render text content - skip for tool messages */}
+                        {message.role !== 'tool' && message.content && <MessageResponse>{message.content}</MessageResponse>}
+
+                        {/* Render tool parts - only show tool results (output or error), not assistant tool calls */}
+                        {message.parts?.filter(p =>
+                          p.type?.startsWith('tool-') &&
+                          (p.state === 'output-available' || p.state === 'output-error')
+                        ).map(renderToolPart)}
+                      </MessageContent>
+                    </Message>
+                  ))
+                )}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t p-4 space-y-3">
+            <PromptInput onSubmit={handleSubmit}>
+              <PromptInputBody>
+                <PromptInputTextarea placeholder="Type your message..." />
+              </PromptInputBody>
+              <PromptInputFooter>
+                <PromptInputTools>
+                  <span className="text-sm text-muted-foreground px-2">
+                    {selectedModelName}
+                  </span>
+                </PromptInputTools>
+                <PromptInputSubmit status={status} />
+              </PromptInputFooter>
+            </PromptInput>
+
+            {/* Suggested Prompts */}
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTED_PROMPTS.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestedPrompt(prompt)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border"
+                  disabled={isLoading}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </header>
-
-      {/* Conversation Area */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <Conversation className="h-full">
-          <ConversationContent>
-            {messages.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-center">
-                <div className="max-w-md space-y-2">
-                  <MessageSquare className="mx-auto size-12 text-muted-foreground" />
-                  <h2 className="text-lg font-semibold">Start a conversation</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Type a message below to test the UI
-                  </p>
-                </div>
-              </div>
-            ) : (
-              messages.map((message, index) => (
-                <Message key={index} from={message.role}>
-                  <MessageContent>
-                    {/* Render text content - skip for tool messages */}
-                    {message.role !== 'tool' && message.content && <MessageResponse>{message.content}</MessageResponse>}
-
-                    {/* Render tool parts - only show tool results (output or error), not assistant tool calls */}
-                    {message.parts?.filter(p =>
-                      p.type?.startsWith('tool-') &&
-                      (p.state === 'output-available' || p.state === 'output-error')
-                    ).map(renderToolPart)}
-                  </MessageContent>
-                </Message>
-              ))
-            )}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-      </div>
-
-      {/* Input Area */}
-      <div className="border-t p-4 space-y-3">
-        <PromptInput onSubmit={handleSubmit}>
-          <PromptInputBody>
-            <PromptInputTextarea placeholder="Type your message..." />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <PromptInputTools>
-              <span className="text-sm text-muted-foreground px-2">
-                {selectedModelName}
-              </span>
-            </PromptInputTools>
-            <PromptInputSubmit status={status} />
-          </PromptInputFooter>
-        </PromptInput>
-
-        {/* Suggested Prompts */}
-        <div className="flex flex-wrap gap-2">
-          {SUGGESTED_PROMPTS.map((prompt, index) => (
-            <button
-              key={index}
-              onClick={() => handleSuggestedPrompt(prompt)}
-              className="text-xs px-3 py-1.5 rounded-full bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border"
-              disabled={isLoading}
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-      </div>
+      </Panel>
+      </Group>
     </div>
   );
 }

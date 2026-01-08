@@ -22,7 +22,7 @@ export const Tool = ({
   ...props
 }) => (
   <Collapsible
-    className={cn("not-prose mb-4 w-full min-w-0 rounded-md border", className)}
+    className={cn("not-prose w-full min-w-0 rounded-md border", className)}
     {...props} />
 );
 
@@ -65,7 +65,7 @@ export const ToolHeader = ({
   ...props
 }) => (
   <CollapsibleTrigger
-    className={cn("flex w-full items-center justify-between gap-4 p-3", className)}
+    className={cn("flex w-full items-center justify-between gap-4 px-3 py-2", className)}
     {...props}>
     <div className="flex items-center gap-2">
       <WrenchIcon className="size-4 text-muted-foreground" />
@@ -96,7 +96,7 @@ export const ToolInput = ({
   input,
   ...props
 }) => (
-  <div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
+  <div className={cn("space-y-2 overflow-hidden p-3", className)} {...props}>
     <h4
       className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
@@ -128,7 +128,7 @@ export const ToolOutput = ({
   }
 
   return (
-    <div className={cn("space-y-2 p-4 min-w-0", className)} {...props}>
+    <div className={cn("space-y-2 p-3 min-w-0", className)} {...props}>
       <h4
         className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
         {errorText ? "Error" : "Result"}
