@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company & Year Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-8 space-y-6">
+            <div class="space-y-2">
+                <h1 class="text-2xl font-bold text-gray-900">Sample Selection</h1>
+                <p class="text-sm text-gray-600">
+                    Select a company and year from the dropdowns below
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Company Dropdown -->
+                <div class="space-y-2">
+                    <label for="company-select" class="block text-sm font-medium text-gray-700">
+                        Company
+                    </label>
+                    <select
+                        id="company-select"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Select a company</option>
+                        <option value="Amazon">Amazon</option>
+                        <option value="Costco">Costco</option>
+                        <option value="Walmart">Walmart</option>
+                        <option value="Macy's">Macy's</option>
+                    </select>
+                </div>
+
+                <!-- Year Dropdown -->
+                <div class="space-y-2">
+                    <label for="year-select" class="block text-sm font-medium text-gray-700">
+                        Year
+                    </label>
+                    <select
+                        id="year-select"
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Select a year</option>
+                        <option value="2018">2018</option>
+                        <option value="2019">2019</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Display selected values -->
+            <div id="selection-display" class="hidden rounded-md border border-gray-200 bg-gray-50 p-4">
+                <h2 class="mb-2 text-sm font-semibold text-gray-900">Selected:</h2>
+                <div class="space-y-1 text-sm text-gray-600">
+                    <p id="company-display" class="hidden">
+                        <span class="font-medium">Company:</span> <span id="company-value"></span>
+                    </p>
+                    <p id="year-display" class="hidden">
+                        <span class="font-medium">Year:</span> <span id="year-value"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const companySelect = document.getElementById('company-select');
+        const yearSelect = document.getElementById('year-select');
+        const selectionDisplay = document.getElementById('selection-display');
+        const companyDisplay = document.getElementById('company-display');
+        const yearDisplay = document.getElementById('year-display');
+        const companyValue = document.getElementById('company-value');
+        const yearValue = document.getElementById('year-value');
+
+        // State object
+        let state = {
+            company: '',
+            year: ''
+        };
+
+        // Update display when selections change
+        function updateDisplay() {
+            state.company = companySelect.value;
+            state.year = yearSelect.value;
+
+            // Update display section
+            if (state.company) {
+                companyValue.textContent = state.company;
+                companyDisplay.classList.remove('hidden');
+            } else {
+                companyDisplay.classList.add('hidden');
+            }
+
+            if (state.year) {
+                yearValue.textContent = state.year;
+                yearDisplay.classList.remove('hidden');
+            } else {
+                yearDisplay.classList.add('hidden');
+            }
+
+            if (state.company || state.year) {
+                selectionDisplay.classList.remove('hidden');
+            } else {
+                selectionDisplay.classList.add('hidden');
+            }
+        }
+
+        // Add event listeners
+        companySelect.addEventListener('change', updateDisplay);
+        yearSelect.addEventListener('change', updateDisplay);
+
+        // PostMessage API for parent window communication
+        window.addEventListener('message', (event) => {
+            const { type, data } = event.data;
+
+            switch (type) {
+                case 'GET_STATE':
+                    // Return current state to parent
+                    event.source.postMessage({
+                        type: 'STATE_RESPONSE',
+                        state: state
+                    }, '*');
+                    break;
+
+                case 'SET_STATE':
+                    // Update state from parent
+                    if (data.company !== undefined) {
+                        companySelect.value = data.company;
+                    }
+                    if (data.year !== undefined) {
+                        yearSelect.value = data.year;
+                    }
+                    updateDisplay();
+                    break;
+            }
+        });
+
+        // Notify parent when ready
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                type: 'IFRAME_READY',
+                state: state
+            }, '*');
+        }
+    </script>
+</body>
+</html>
