@@ -143,6 +143,8 @@ const SUGGESTED_PROMPTS = [
   'Can you give me 5 example SQL scripts',
   'What is 123.45 + 67.89?',
   'Can you describe your tools to me',
+  'Can you select Macy\'s 2023?',
+  'Can you get the current selection?',
 ];
 
 export default function ChatApp() {
