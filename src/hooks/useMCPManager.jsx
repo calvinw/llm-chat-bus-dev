@@ -5,7 +5,10 @@ import { MCPClient } from '../utils/mcpClient.jsx';
  * Hook to manage MCP server connections and tools
  */
 const useMCPManager = (transport = 'auto') => {
-  const [mcpServerUrl, setMcpServerUrl] = useState('');
+  const defaultMcpServerUrl = 'https://bus-mgmt-databases.mcp.mathplosion.com/mcp-dolt-database/sse';
+  const [mcpServerUrl, setMcpServerUrl] = useState(() => {
+    return localStorage.getItem('mcp_server_url') || defaultMcpServerUrl;
+  });
   const [mcpTransport, setMcpTransport] = useState(transport);
   const [mcpConnectionStatus, setMcpConnectionStatus] = useState(null);
   const [mcpTools, setMcpTools] = useState([]);
@@ -15,6 +18,8 @@ const useMCPManager = (transport = 'auto') => {
 
   // Connect to MCP server when URL changes
   useEffect(() => {
+    localStorage.setItem('mcp_server_url', mcpServerUrl);
+
     const connectToMCP = async () => {
       if (!mcpServerUrl || !mcpServerUrl.trim()) {
         // Clear MCP state when URL is empty

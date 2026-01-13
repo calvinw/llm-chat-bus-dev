@@ -82,8 +82,8 @@
 
         // State object
         let state = {
-            company: '',
-            year: ''
+            company: 'Walmart',
+            year: '2022'
         };
 
         // Update display when selections change
@@ -112,6 +112,11 @@
                 selectionDisplay.classList.add('hidden');
             }
         }
+
+        // Apply default selections
+        companySelect.value = state.company;
+        yearSelect.value = state.year;
+        updateDisplay();
 
         // Add event listeners
         companySelect.addEventListener('change', updateDisplay);

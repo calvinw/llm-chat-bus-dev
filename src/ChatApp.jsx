@@ -22,6 +22,21 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { MessageSquare, RotateCcw, Settings, ExternalLink } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
@@ -111,42 +126,16 @@ const addNumbersHandler = ({ a, b }) => {
   };
 };
 
-// Welcome message
-const WELCOME_MESSAGE = {
-  role: 'assistant',
-  content: `# Welcome to FIT Retail Index Chat! 🎉
-
-This is a powerful AI chat interface built with **shadcn AI Elements** and **OpenRouter**.
-
-## Getting Started
-
-1. **Enter your API Key** - Click the **Settings** button and enter your OpenRouter API key
-2. **Select a Model** - Choose from available models like GPT-4o, Claude 3.5 Sonnet, etc.
-3. **Start Chatting** - Type your message below and press Enter
-
-## Features
-
-- ✨ **Streaming Responses** - Watch responses appear in real-time
-- 🎨 **Rich Markdown** - Beautiful rendering with code highlighting, tables, and math
-- 🔧 **Multiple Models** - Switch between GPT-4o, Claude, Gemini, and more
-- 🔨 **Tool Support** - Try asking "What is 123.45 + 67.89?"
-- 💾 **Persistent Settings** - Your API key and model are saved automatically
-
----
-
-Ready to chat? Enter your API key in settings and send a message! 🚀`
-};
-
 // Suggested prompts for quick testing
-const SUGGESTED_PROMPTS = [
-  'Show me examples of markdown rendering with code blocks, math expressions, lists, tables, and other formatting.',
-  'Can you explain conjoint analysis using math notation',
-  'Can you give me 5 example SQL scripts',
-  'What is 123.45 + 67.89?',
-  'Can you describe your tools to me',
-  'Can you select Macy\'s 2023?',
-  'Can you get the current selection?',
-];
+  const SUGGESTED_PROMPTS = [
+    'Can you describe your tools to me',
+    'Can you select Macy\'s 2023?',
+    'Tell me what company and year is selected',
+    'Can you describe the tables in the Dolt DB with db_string calvinw/BusMgmtBenchmarks/main',
+    'Can you fetch the financials from the Dolt db for the currently selected company?',
+    'Using the calvinw/BusMgmtBenchmarks/main database fetch the financials for the currently selected company',
+  ];
+
 
 export default function ChatApp() {
   // Settings state
@@ -266,7 +255,7 @@ export default function ChatApp() {
 
   // Use the OpenRouter chat hook with welcome message and merged tools
   const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
-    [WELCOME_MESSAGE],
+    [],
     mergedTools,
     mergedToolHandlers
   );
@@ -307,6 +296,15 @@ export default function ChatApp() {
   };
 
   const selectedModelName = selectedModel;
+  const mcpStatusClassName = mcpConnectionStatus === 'connected'
+    ? 'border-green-600 text-green-600'
+    : mcpConnectionStatus === 'error'
+    ? 'border-red-600 text-red-600'
+    : 'border-yellow-600 text-yellow-600';
+  const apiKeyStatusClassName = apiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+  const mcpStatusLabel = mcpConnectionStatus ?? 'not connected';
+  const mcpBadgeClassName = mcpConnectionStatus ? mcpStatusClassName : 'border-red-600 text-red-600';
+  const iframeStatusClassName = iframeSrc ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
 
   // Render tool parts if present
   const renderToolPart = (part) => {
@@ -382,21 +380,22 @@ export default function ChatApp() {
                         onChange={(e) => handleSaveApiKey(e.target.value)}
                         placeholder="sk-or-..."
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <CardDescription className="text-xs">
                         Get your API key from{' '}
-                        <a
-                          href="https://openrouter.ai/keys"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline hover:text-foreground"
-                        >
-                          openrouter.ai
-                        </a>
-                      </p>
+                        <Button variant="link" asChild className="h-auto p-0 text-xs">
+                          <a
+                            href="https://openrouter.ai/keys"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            openrouter.ai
+                          </a>
+                        </Button>
+                      </CardDescription>
                       {apiKey && (
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                          ✓ API key is set
-                        </p>
+                        <Badge variant="outline" className="w-fit border-green-600 text-green-600">
+                          API key set
+                        </Badge>
                       )}
                     </div>
 
@@ -404,40 +403,40 @@ export default function ChatApp() {
                     <div className="space-y-2">
                       <Label htmlFor="model">Model</Label>
                       {modelsLoading ? (
-                        <p className="text-xs text-muted-foreground">Loading models...</p>
+                        <CardDescription className="text-xs">Loading models...</CardDescription>
                       ) : (
                         <>
-                          <select
-                            id="model"
-                            value={selectedModel}
-                            onChange={(e) => handleSaveModel(e.target.value)}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {models.map(model => (
-                              <option key={model.id} value={model.id}>
-                                {model.id}
-                              </option>
-                            ))}
-                          </select>
-                          <p className="text-xs text-muted-foreground">
+                          <Select value={selectedModel} onValueChange={handleSaveModel}>
+                            <SelectTrigger id="model">
+                              <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
+                            <SelectContent
+                              position="popper"
+                              avoidCollisions
+                              className="max-h-[70vh]"
+                            >
+                              {models.map(model => (
+                                <SelectItem key={model.id} value={model.id}>
+                                  {model.id}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <CardDescription className="text-xs">
                             {models.length} models available • Selected: {selectedModelName}
-                          </p>
+                          </CardDescription>
                         </>
                       )}
                     </div>
 
                     {/* MCP Server URL Input */}
                     <div className="space-y-2">
-                      <Label htmlFor="mcp-url">
+                      <Label htmlFor="mcp-url" className="flex items-center gap-2">
                         MCP Server URL
                         {mcpConnectionStatus && (
-                          <span className={`ml-2 text-xs ${
-                            mcpConnectionStatus === 'connected' ? 'text-green-600' :
-                            mcpConnectionStatus === 'error' ? 'text-red-600' :
-                            'text-yellow-600'
-                          }`}>
-                            ({mcpConnectionStatus})
-                          </span>
+                          <Badge variant="outline" className={mcpStatusClassName}>
+                            {mcpConnectionStatus}
+                          </Badge>
                         )}
                       </Label>
                       <Input
@@ -447,14 +446,14 @@ export default function ChatApp() {
                         onChange={(e) => setMcpServerUrl(e.target.value)}
                         placeholder="http://localhost:8001/sse"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <CardDescription className="text-xs">
                         Connect to an MCP server to add remote tools.
-                        {mcpTools.length > 0 && (
-                          <span className="block mt-1 text-green-600">
-                            {mcpTools.length} tool(s) loaded: {mcpTools.map(t => t.function.name).join(', ')}
-                          </span>
-                        )}
-                      </p>
+                      </CardDescription>
+                      {mcpTools.length > 0 && (
+                        <Badge variant="outline" className="w-fit border-green-600 text-green-600">
+                          {mcpTools.length} tool(s) loaded: {mcpTools.map(t => t.function.name).join(', ')}
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Iframe URL Input */}
@@ -471,22 +470,47 @@ export default function ChatApp() {
                         }}
                         placeholder="./BusMgmtBenchmarks/company_to_company.html"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <CardDescription className="text-xs">
                         URL to load in the left side panel. Must be same-origin for DOM access.
                         Leave empty to hide the panel.
-                      </p>
+                      </CardDescription>
                     </div>
 
                     {/* Info Box */}
-                    <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                      <p className="font-medium mb-1">Current Configuration:</p>
-                      <ul className="space-y-1">
-                        <li>• API Key: {apiKey ? '✓ Set' : '✗ Not set'}</li>
-                        <li>• Model: {selectedModelName}</li>
-                        <li>• MCP Server: {mcpConnectionStatus === 'connected' ? `✓ Connected (${mcpTools.length} tools)` : '✗ Not connected'}</li>
-                        <li>• Iframe App: {iframeSrc ? '✓ Enabled' : '✗ Hidden'}</li>
-                      </ul>
-                    </div>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xs">Current Configuration</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>API Key</span>
+                          <Badge variant="outline" className={apiKeyStatusClassName}>
+                            {apiKey ? 'Set' : 'Not set'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Model</span>
+                          <Badge variant="secondary">{selectedModelName}</Badge>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>MCP Server</span>
+                          <Badge variant="outline" className={mcpBadgeClassName}>
+                            {mcpStatusLabel}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Iframe App</span>
+                          <Badge variant="outline" className={iframeStatusClassName}>
+                            {iframeSrc ? 'Enabled' : 'Hidden'}
+                          </Badge>
+                        </div>
+                        {mcpConnectionStatus === 'connected' && (
+                          <CardDescription className="text-xs">
+                            {mcpTools.length} tool(s) available.
+                          </CardDescription>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 </SheetContent>
               </Sheet>

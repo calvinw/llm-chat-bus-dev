@@ -4,11 +4,15 @@ import { useCallback, useState } from 'react';
  * Serverless OpenRouter chat hook using direct fetch
  * Works directly in the browser with no backend needed
  * Supports tool calling with AI Elements compatible parts structure
+ * Supports unlimited tool call chaining and parallel tool execution
  */
 export function useOpenRouterChat(initialMessages = [], tools = null, toolHandlers = null) {
   const [messages, setMessages] = useState(initialMessages);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
+
+  // Maximum number of tool call rounds to prevent infinite loops
+  const MAX_TOOL_ROUNDS = 20;
 
   /**
    * Execute a tool call
@@ -74,6 +78,7 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
 
   /**
    * Send a message to OpenRouter and stream the response
+   * Supports unlimited tool call chaining
    */
   const sendMessage = useCallback(async (content, options = {}) => {
     const { model = 'openai/gpt-4o-mini', systemPrompt } = options;
@@ -91,31 +96,10 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
     setError(null);
     setStatus('streaming');
 
-    try {
-      // Build messages array for API call (without parts, but with tool_calls)
-      const apiMessages = newMessages.map(m => {
-        if (m.role === 'tool') {
-          // Tool result message
-          return {
-            role: 'tool',
-            tool_call_id: m.tool_call_id,
-            content: m.content || (typeof m.output === 'string' ? m.output : JSON.stringify(m.output))
-          };
-        }
-        // Include tool_calls for assistant messages that have them
-        const msg = { role: m.role, content: m.content };
-        if (m.tool_calls) {
-          msg.tool_calls = m.tool_calls;
-        }
-        return msg;
-      });
+    const decoder = new TextDecoder();
 
-      // Add system prompt if provided
-      if (systemPrompt) {
-        apiMessages.unshift({ role: 'system', content: systemPrompt });
-      }
-
-      // Build request body with tools if available
+    // Helper function to stream a response (defined inside sendMessage to avoid adding hooks)
+    const streamResponse = async (apiMessages) => {
       const requestBody = {
         model,
         messages: apiMessages,
@@ -127,7 +111,6 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
         requestBody.tool_choice = 'auto';
       }
 
-      // Stream response from OpenRouter using fetch
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -144,13 +127,11 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
         throw new Error(`OpenRouter API error: ${response.status} - ${errorData}`);
       }
 
-      // Handle the streaming response
       const reader = response.body.getReader();
-      const decoder = new TextDecoder();
       let fullContent = '';
       let buffer = '';
-      let currentAssistantMessage = null;
       let toolCalls = [];
+      let assistantMessage = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -176,15 +157,19 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
                   if (delta.content) {
                     fullContent += delta.content;
 
-                    if (!currentAssistantMessage) {
-                      currentAssistantMessage = { role: 'assistant', content: fullContent, parts: [{ type: 'text', text: fullContent }] };
-                      setMessages(prev => [...prev, currentAssistantMessage]);
+                    if (!assistantMessage) {
+                      assistantMessage = {
+                        role: 'assistant',
+                        content: fullContent,
+                        parts: [{ type: 'text', text: fullContent }]
+                      };
+                      setMessages(prev => [...prev, assistantMessage]);
                     } else {
-                      currentAssistantMessage.content = fullContent;
-                      currentAssistantMessage.parts[0] = { type: 'text', text: fullContent };
+                      assistantMessage.content = fullContent;
+                      assistantMessage.parts[0] = { type: 'text', text: fullContent };
                       setMessages(prev => {
                         const updated = [...prev];
-                        updated[updated.length - 1] = { ...currentAssistantMessage };
+                        updated[updated.length - 1] = { ...assistantMessage };
                         return updated;
                       });
                     }
@@ -227,9 +212,51 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
         }
       }
 
-      // After streaming completes, handle tool calls if present
-      if (toolCalls.length > 0) {
-        // Ensure assistant message exists
+      return { fullContent, toolCalls, assistantMessage };
+    };
+
+    try {
+      // Build initial messages array for API call
+      let apiMessages = newMessages.map(m => {
+        if (m.role === 'tool') {
+          return {
+            role: 'tool',
+            tool_call_id: m.tool_call_id,
+            content: m.content || (typeof m.output === 'string' ? m.output : JSON.stringify(m.output))
+          };
+        }
+        const msg = { role: m.role, content: m.content };
+        if (m.tool_calls) {
+          msg.tool_calls = m.tool_calls;
+        }
+        return msg;
+      });
+
+      // Add system prompt if provided
+      if (systemPrompt) {
+        apiMessages.unshift({ role: 'system', content: systemPrompt });
+      }
+
+      let toolRound = 0;
+
+      // Loop until no more tool calls or max rounds reached
+      while (toolRound < MAX_TOOL_ROUNDS) {
+        toolRound++;
+        console.log(`Tool round ${toolRound}`);
+
+        setStatus('streaming');
+        const { fullContent, toolCalls, assistantMessage } = await streamResponse(apiMessages);
+
+        // If no tool calls, we're done
+        if (toolCalls.length === 0) {
+          console.log('No more tool calls, conversation complete');
+          break;
+        }
+
+        console.log(`Round ${toolRound}: ${toolCalls.length} tool call(s)`, toolCalls.map(tc => tc.function.name));
+
+        // Ensure assistant message exists for tool calls
+        let currentAssistantMessage = assistantMessage;
         if (!currentAssistantMessage) {
           currentAssistantMessage = {
             role: 'assistant',
@@ -239,11 +266,11 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
           setMessages(prev => [...prev, currentAssistantMessage]);
         }
 
-        // Update the assistant message with final tool parts
-        const finalToolParts = toolCallsToParts(toolCalls, 'input-available');
+        // Update the assistant message with tool parts
+        const toolParts = toolCallsToParts(toolCalls, 'input-available');
         const parts = [
           { type: 'text', text: fullContent },
-          ...finalToolParts
+          ...toolParts
         ];
 
         currentAssistantMessage.tool_calls = toolCalls;
@@ -282,17 +309,14 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
 
         setMessages(prev => [...prev, ...toolResultMessages]);
 
-        // Make another API call with tool results
-        setStatus('streaming');
-
-        // Build follow-up messages with ONE assistant message containing ALL tool_calls
-        // followed by ALL tool results
-        const followUpMessages = [
+        // Build messages for next round
+        // Include the assistant message with tool_calls and all tool results
+        apiMessages = [
           ...apiMessages,
           {
             role: 'assistant',
             content: fullContent || '',
-            tool_calls: toolCalls  // All tool calls in one message
+            tool_calls: toolCalls
           },
           ...toolResults.map(tr => ({
             role: 'tool',
@@ -300,249 +324,10 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
             content: tr.output?.summary || (tr.output ? JSON.stringify(tr.output) : tr.errorText)
           }))
         ];
+      }
 
-        const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': window.location.href,
-            'X-Title': 'FIT Retail Index Chat',
-          },
-          body: JSON.stringify({
-            model,
-            messages: followUpMessages,
-            stream: true,
-            tools,
-          }),
-        });
-
-        if (!followUpResponse.ok) {
-          throw new Error(`Follow-up API error: ${followUpResponse.status}`);
-        }
-
-        // Stream the follow-up response (with tool call support for chaining)
-        const followUpReader = followUpResponse.body.getReader();
-        let followUpContent = '';
-        let followUpBuffer = '';
-        let followUpAssistantMessage = null;
-        let followUpToolCalls = [];
-
-        while (true) {
-          const { done, value } = await followUpReader.read();
-          if (done) break;
-
-          followUpBuffer += decoder.decode(value, { stream: true });
-          const lines = followUpBuffer.split('\n');
-          followUpBuffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || trimmed === 'data: [DONE]') continue;
-            if (trimmed.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(trimmed.slice(6));
-                const choice = data.choices?.[0];
-
-                if (choice) {
-                  const delta = choice.delta;
-
-                  if (delta) {
-                    // Handle content streaming
-                    if (delta.content) {
-                      followUpContent += delta.content;
-
-                      if (!followUpAssistantMessage) {
-                        followUpAssistantMessage = {
-                          role: 'assistant',
-                          content: followUpContent,
-                          parts: [{ type: 'text', text: followUpContent }]
-                        };
-                        setMessages(prev => [...prev, followUpAssistantMessage]);
-                      } else {
-                        followUpAssistantMessage.content = followUpContent;
-                        followUpAssistantMessage.parts = [{ type: 'text', text: followUpContent }];
-                        setMessages(prev => {
-                          const updated = [...prev];
-                          updated[updated.length - 1] = { ...followUpAssistantMessage };
-                          return updated;
-                        });
-                      }
-                    }
-
-                    // Handle tool calls in follow-up (for chaining)
-                    if (delta.tool_calls) {
-                      for (const toolCall of delta.tool_calls) {
-                        const existingCall = followUpToolCalls.find(tc => tc.index === toolCall.index);
-
-                        if (existingCall) {
-                          if (toolCall.id) existingCall.id = toolCall.id;
-                          if (toolCall.function?.name) {
-                            existingCall.function.name = toolCall.function.name;
-                          }
-                          if (toolCall.function?.arguments) {
-                            existingCall.function.arguments += toolCall.function.arguments;
-                          }
-                        } else {
-                          followUpToolCalls.push({
-                            index: toolCall.index,
-                            id: toolCall.id,
-                            type: toolCall.type || 'function',
-                            function: {
-                              name: toolCall.function?.name || '',
-                              arguments: toolCall.function?.arguments || ''
-                            }
-                          });
-                        }
-                      }
-                    }
-                  }
-                }
-              } catch (e) {
-                // Ignore parse errors
-              }
-            }
-          }
-        }
-
-        // Handle chained tool calls from follow-up response
-        if (followUpToolCalls.length > 0) {
-          console.log('Chained tool calls detected:', followUpToolCalls);
-
-          // Ensure assistant message exists
-          if (!followUpAssistantMessage) {
-            followUpAssistantMessage = {
-              role: 'assistant',
-              content: followUpContent || '',
-              parts: []
-            };
-            setMessages(prev => [...prev, followUpAssistantMessage]);
-          }
-
-          // Update with tool parts
-          const chainedToolParts = toolCallsToParts(followUpToolCalls, 'input-available');
-          followUpAssistantMessage.tool_calls = followUpToolCalls;
-          followUpAssistantMessage.content = followUpContent || '';
-          followUpAssistantMessage.parts = [
-            { type: 'text', text: followUpContent },
-            ...chainedToolParts
-          ];
-
-          setMessages(prev => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { ...followUpAssistantMessage };
-            return updated;
-          });
-
-          // Execute chained tools
-          setStatus('executing_tools');
-          const chainedResults = await Promise.all(followUpToolCalls.map(tc => executeTool(tc)));
-
-          // Add chained tool results to messages
-          const chainedToolMessages = chainedResults.map(result => ({
-            role: 'tool',
-            content: result.output ? JSON.stringify(result.output) : result.errorText,
-            tool_call_id: result.tool_call_id,
-            toolName: result.toolName,
-            state: result.state,
-            input: result.input,
-            output: result.output,
-            errorText: result.errorText,
-            parts: [{
-              type: `tool-${result.toolName}`,
-              state: result.state,
-              toolCallId: result.tool_call_id,
-              input: result.input,
-              output: result.output,
-              errorText: result.errorText
-            }]
-          }));
-
-          setMessages(prev => [...prev, ...chainedToolMessages]);
-
-          // Continue with another follow-up for chained results
-          setStatus('streaming');
-
-          const chainedFollowUpMessages = [
-            ...followUpMessages,
-            {
-              role: 'assistant',
-              content: followUpContent || '',
-              tool_calls: followUpToolCalls
-            },
-            ...chainedResults.map(tr => ({
-              role: 'tool',
-              tool_call_id: tr.tool_call_id,
-              content: tr.output?.summary || (tr.output ? JSON.stringify(tr.output) : tr.errorText)
-            }))
-          ];
-
-          const chainedResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': window.location.href,
-              'X-Title': 'FIT Retail Index Chat',
-            },
-            body: JSON.stringify({
-              model,
-              messages: chainedFollowUpMessages,
-              stream: true,
-              tools,
-            }),
-          });
-
-          if (chainedResponse.ok) {
-            // Stream final response (no more tool chaining to keep it simple)
-            const chainedReader = chainedResponse.body.getReader();
-            let chainedContent = '';
-            let chainedBuffer = '';
-            let chainedAssistantMessage = null;
-
-            while (true) {
-              const { done, value } = await chainedReader.read();
-              if (done) break;
-
-              chainedBuffer += decoder.decode(value, { stream: true });
-              const lines = chainedBuffer.split('\n');
-              chainedBuffer = lines.pop() || '';
-
-              for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed === 'data: [DONE]') continue;
-                if (trimmed.startsWith('data: ')) {
-                  try {
-                    const data = JSON.parse(trimmed.slice(6));
-                    const delta = data.choices?.[0]?.delta?.content;
-                    if (delta) {
-                      chainedContent += delta;
-
-                      if (!chainedAssistantMessage) {
-                        chainedAssistantMessage = {
-                          role: 'assistant',
-                          content: chainedContent,
-                          parts: [{ type: 'text', text: chainedContent }]
-                        };
-                        setMessages(prev => [...prev, chainedAssistantMessage]);
-                      } else {
-                        chainedAssistantMessage.content = chainedContent;
-                        chainedAssistantMessage.parts = [{ type: 'text', text: chainedContent }];
-                        setMessages(prev => {
-                          const updated = [...prev];
-                          updated[updated.length - 1] = { ...chainedAssistantMessage };
-                          return updated;
-                        });
-                      }
-                    }
-                  } catch (e) {
-                    // Ignore parse errors
-                  }
-                }
-              }
-            }
-          }
-        }
+      if (toolRound >= MAX_TOOL_ROUNDS) {
+        console.warn(`Reached maximum tool rounds (${MAX_TOOL_ROUNDS}), stopping`);
       }
 
       setStatus('idle');
