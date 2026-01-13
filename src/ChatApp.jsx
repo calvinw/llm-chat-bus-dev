@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { MessageSquare, RotateCcw, Settings, ExternalLink } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
+import useMCPManager from '@/hooks/useMCPManager';
 import {
   Panel,
   Group,
@@ -247,14 +248,27 @@ export default function ChatApp() {
     }
   };
 
-  // Tools array
-  const tools = [addNumbersTool, getSelectedCompanyTool, setSelectedCompanyTool];
+  // Local tools array
+  const localTools = [addNumbersTool, getSelectedCompanyTool, setSelectedCompanyTool];
 
-  // Use the OpenRouter chat hook with welcome message and tools
+  // MCP Manager for remote tool servers
+  const {
+    mcpServerUrl,
+    setMcpServerUrl,
+    mcpConnectionStatus,
+    mcpTools,
+    mcpToolHandlers,
+  } = useMCPManager();
+
+  // Merge local tools with MCP tools
+  const mergedTools = [...localTools, ...mcpTools];
+  const mergedToolHandlers = { ...toolHandlers, ...mcpToolHandlers };
+
+  // Use the OpenRouter chat hook with welcome message and merged tools
   const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
     [WELCOME_MESSAGE],
-    tools,
-    toolHandlers
+    mergedTools,
+    mergedToolHandlers
   );
 
   // Fetch models from OpenRouter API
@@ -412,6 +426,37 @@ export default function ChatApp() {
                       )}
                     </div>
 
+                    {/* MCP Server URL Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor="mcp-url">
+                        MCP Server URL
+                        {mcpConnectionStatus && (
+                          <span className={`ml-2 text-xs ${
+                            mcpConnectionStatus === 'connected' ? 'text-green-600' :
+                            mcpConnectionStatus === 'error' ? 'text-red-600' :
+                            'text-yellow-600'
+                          }`}>
+                            ({mcpConnectionStatus})
+                          </span>
+                        )}
+                      </Label>
+                      <Input
+                        id="mcp-url"
+                        type="url"
+                        value={mcpServerUrl}
+                        onChange={(e) => setMcpServerUrl(e.target.value)}
+                        placeholder="http://localhost:8001/sse"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Connect to an MCP server to add remote tools.
+                        {mcpTools.length > 0 && (
+                          <span className="block mt-1 text-green-600">
+                            {mcpTools.length} tool(s) loaded: {mcpTools.map(t => t.function.name).join(', ')}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
                     {/* Iframe URL Input */}
                     <div className="space-y-2">
                       <Label htmlFor="iframe-url">Iframe App URL</Label>
@@ -438,6 +483,7 @@ export default function ChatApp() {
                       <ul className="space-y-1">
                         <li>• API Key: {apiKey ? '✓ Set' : '✗ Not set'}</li>
                         <li>• Model: {selectedModelName}</li>
+                        <li>• MCP Server: {mcpConnectionStatus === 'connected' ? `✓ Connected (${mcpTools.length} tools)` : '✗ Not connected'}</li>
                         <li>• Iframe App: {iframeSrc ? '✓ Enabled' : '✗ Hidden'}</li>
                       </ul>
                     </div>
