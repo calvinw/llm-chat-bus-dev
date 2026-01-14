@@ -48,38 +48,39 @@ import {
 } from 'react-resizable-panels';
 
 /**
- * Tool definition for adding two numbers
+ * Example tool definition for adding two numbers (commented out)
+ * Uncomment to add this as a local tool
  */
-const addNumbersTool = {
-  type: "function",
-  function: {
-    name: "add_numbers",
-    description: "Add two numbers together and return the result. Supports decimal numbers.",
-    parameters: {
-      type: "object",
-      properties: {
-        a: {
-          type: "number",
-          description: "The first number"
-        },
-        b: {
-          type: "number",
-          description: "The second number"
-        }
-      },
-      required: ["a", "b"]
-    }
-  }
-};
+// const addNumbersTool = {
+//   type: "function",
+//   function: {
+//     name: "add_numbers",
+//     description: "Add two numbers together and return the result. Supports decimal numbers.",
+//     parameters: {
+//       type: "object",
+//       properties: {
+//         a: {
+//           type: "number",
+//           description: "The first number"
+//         },
+//         b: {
+//           type: "number",
+//           description: "The second number"
+//         }
+//       },
+//       required: ["a", "b"]
+//     }
+//   }
+// };
 
 /**
- * Tool definition for getting selected company and year
+ * Tool definition for getting selected companies and years
  */
 const getSelectedCompanyTool = {
   type: "function",
   function: {
     name: "get_selected_company",
-    description: "Get the current company and year selections from the iframe app dropdowns. Returns both the selected company and year values.",
+    description: "Get the current company and year selections from the financial comparison iframe. Returns company1, year1, company2, and year2 for the two companies being compared.",
     parameters: {
       type: "object",
       properties: {},
@@ -89,23 +90,31 @@ const getSelectedCompanyTool = {
 };
 
 /**
- * Tool definition for setting selected company and year
+ * Tool definition for setting selected companies and years
  */
 const setSelectedCompanyTool = {
   type: "function",
   function: {
     name: "set_selected_company",
-    description: "Set the company and/or year dropdown selections in the iframe app. Valid companies: Amazon, Costco, Walmart, Macy's. Valid years: 2018-2024.",
+    description: "Set the company and/or year dropdown selections in the financial comparison iframe. You can set company1/year1 for the first company and company2/year2 for the second company. Valid years: 2018-2024. Companies are loaded from the database (common ones: Amazon, Costco, Walmart, Macy's, Target, etc.).",
     parameters: {
       type: "object",
       properties: {
-        company: {
+        company1: {
           type: "string",
-          description: "The company to select (Amazon, Costco, Walmart, or Macy's)"
+          description: "The first company to compare"
         },
-        year: {
+        year1: {
           type: "string",
-          description: "The year to select (2018-2024)"
+          description: "The year for the first company (2018-2024)"
+        },
+        company2: {
+          type: "string",
+          description: "The second company to compare"
+        },
+        year2: {
+          type: "string",
+          description: "The year for the second company (2018-2024)"
         }
       },
       required: []
@@ -114,26 +123,25 @@ const setSelectedCompanyTool = {
 };
 
 /**
- * Tool handler implementation
+ * Example tool handler implementation (commented out)
+ * Uncomment along with addNumbersTool to enable
  */
-const addNumbersHandler = ({ a, b }) => {
-  const result = a + b;
-  return {
-    summary: `${a} + ${b} = ${result}`,
-    a: a,
-    b: b,
-    result: result
-  };
-};
+// const addNumbersHandler = ({ a, b }) => {
+//   const result = a + b;
+//   return {
+//     summary: `${a} + ${b} = ${result}`,
+//     a: a,
+//     b: b,
+//     result: result
+//   };
+// };
 
 // Suggested prompts for quick testing
   const SUGGESTED_PROMPTS = [
     'Can you describe your tools to me',
-    'Can you select Macy\'s 2023?',
-    'Tell me what company and year is selected',
-    'Can you describe the tables in the Dolt DB with db_string calvinw/BusMgmtBenchmarks/main',
-    'Can you fetch the financials from the Dolt db for the currently selected company?',
-    'Using the calvinw/BusMgmtBenchmarks/main database fetch the financials for the currently selected company',
+    'What companies are being compared?',
+    'Compare Costco 2023 with Target 2023',
+    'Can you help me do an ROA calculation for the companies and years shown? Use calvinw/BusMgmtBenchmarks/main as the database',
   ];
 
 
@@ -144,7 +152,7 @@ export default function ChatApp() {
 
   // Iframe panel state
   const [iframeSrc, setIframeSrc] = useState(() => {
-    return localStorage.getItem('chatapp_iframe_src') || './sample-dropdown.html';
+    return localStorage.getItem('chatapp_iframe_src') || './company-to-company.html';
   });
   const iframeRef = useRef(null);
 
@@ -156,7 +164,25 @@ export default function ChatApp() {
       const doc = iframeRef.current.contentWindow?.document;
       if (!doc) return null;
 
-      // Get dropdown values from sample page
+      // Get dropdown values - supports both single company (sample-dropdown) and comparison (company-to-company)
+      const company1Select = doc.querySelector('#company1-select');
+      const year1Select = doc.querySelector('#year1-select');
+      const company2Select = doc.querySelector('#company2-select');
+      const year2Select = doc.querySelector('#year2-select');
+
+      // Check if it's the comparison app (has company1/company2 selects)
+      if (company1Select) {
+        return {
+          company1: company1Select?.value || '',
+          year1: year1Select?.value || '',
+          company2: company2Select?.value || '',
+          year2: year2Select?.value || '',
+          title: doc.title,
+          url: iframeRef.current.contentWindow?.location?.href,
+        };
+      }
+
+      // Fallback to single company selects (legacy sample-dropdown.html)
       const companySelect = doc.querySelector('#company-select');
       const yearSelect = doc.querySelector('#year-select');
 
@@ -192,8 +218,20 @@ export default function ChatApp() {
         return false;
       };
 
-      if (config.company) setSelectValue('#company-select', config.company);
-      if (config.year) setSelectValue('#year-select', config.year);
+      // Check if it's the comparison app (has company1/company2 selects)
+      const isComparisonApp = doc.querySelector('#company1-select') !== null;
+
+      if (isComparisonApp) {
+        // Comparison app with two companies
+        if (config.company1) setSelectValue('#company1-select', config.company1);
+        if (config.year1) setSelectValue('#year1-select', config.year1);
+        if (config.company2) setSelectValue('#company2-select', config.company2);
+        if (config.year2) setSelectValue('#year2-select', config.year2);
+      } else {
+        // Legacy single company app
+        if (config.company) setSelectValue('#company-select', config.company);
+        if (config.year) setSelectValue('#year-select', config.year);
+      }
 
       return true;
     } catch (e) {
@@ -202,33 +240,70 @@ export default function ChatApp() {
     }
   }, [iframeSrc]);
 
-  // Tool handlers
+  // Tool handlers (add add_numbers handler here if uncommenting the example tool above)
   const toolHandlers = {
-    add_numbers: ({ a, b }) => {
-      const result = a + b;
-      return {
-        summary: `${a} + ${b} = ${result}`,
-        a: a,
-        b: b,
-        result: result
-      };
-    },
+    // add_numbers: ({ a, b }) => {
+    //   const result = a + b;
+    //   return {
+    //     summary: `${a} + ${b} = ${result}`,
+    //     a: a,
+    //     b: b,
+    //     result: result
+    //   };
+    // },
     get_selected_company: () => {
       const state = getIframeState();
       if (!state) {
         return { error: 'Iframe not loaded or not accessible' };
       }
+
+      // Check if it's the comparison app (has company1/company2)
+      if (state.company1 !== undefined) {
+        return {
+          summary: `Comparing ${state.company1} (${state.year1}) vs ${state.company2} (${state.year2})`,
+          company1: state.company1 || 'Not selected',
+          year1: state.year1 || 'Not selected',
+          company2: state.company2 || 'Not selected',
+          year2: state.year2 || 'Not selected',
+          title: state.title
+        };
+      }
+
+      // Legacy single company format
       return {
         company: state.company || 'Not selected',
         year: state.year || 'Not selected',
         title: state.title
       };
     },
-    set_selected_company: ({ company, year }) => {
-      const success = setIframeState({ company, year });
+    set_selected_company: ({ company, year, company1, year1, company2, year2 }) => {
+      // Build config object supporting both old and new format
+      const config = {};
+      if (company1) config.company1 = company1;
+      if (year1) config.year1 = year1;
+      if (company2) config.company2 = company2;
+      if (year2) config.year2 = year2;
+      // Legacy support
+      if (company) config.company = company;
+      if (year) config.year = year;
+
+      const success = setIframeState(config);
       if (!success) {
         return { error: 'Failed to set iframe state. Iframe may not be loaded.' };
       }
+
+      // Return appropriate response based on what was set
+      if (company1 || company2) {
+        return {
+          success: true,
+          summary: `Set comparison: ${company1 || 'unchanged'} (${year1 || 'unchanged'}) vs ${company2 || 'unchanged'} (${year2 || 'unchanged'})`,
+          company1: company1 || 'unchanged',
+          year1: year1 || 'unchanged',
+          company2: company2 || 'unchanged',
+          year2: year2 || 'unchanged'
+        };
+      }
+
       return {
         success: true,
         company: company || 'unchanged',
@@ -237,8 +312,8 @@ export default function ChatApp() {
     }
   };
 
-  // Local tools array
-  const localTools = [addNumbersTool, getSelectedCompanyTool, setSelectedCompanyTool];
+  // Local tools array (add addNumbersTool here if uncommenting the example above)
+  const localTools = [getSelectedCompanyTool, setSelectedCompanyTool];
 
   // MCP Manager for remote tool servers
   const {
