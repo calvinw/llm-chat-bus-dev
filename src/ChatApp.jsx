@@ -123,6 +123,22 @@ const setSelectedCompanyTool = {
 };
 
 /**
+ * Tool definition for getting displayed financial data
+ */
+const getFinancialDataTool = {
+  type: "function",
+  function: {
+    name: "get_financial_data",
+    description: "Get the actual financial data currently displayed in the comparison table, including all metrics with their rounded/formatted values exactly as shown to the user. This is critical for doing calculations with students using the same numbers they see. Returns financial numbers (revenue, costs, assets) and financial indicators (ratios, percentages) for both companies.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  }
+};
+
+/**
  * Example tool handler implementation (commented out)
  * Uncomment along with addNumbersTool to enable
  */
@@ -140,8 +156,9 @@ const setSelectedCompanyTool = {
   const SUGGESTED_PROMPTS = [
     'Can you describe your tools to me',
     'What companies are being compared?',
+    'Show me the financial data currently displayed',
     'Compare Costco 2023 with Target 2023',
-    'Can you help me do an ROA calculation for the companies and years shown? Use calvinw/BusMgmtBenchmarks/main as the database',
+    'Can you help me calculate ROA using the displayed values?',
   ];
 
 
@@ -309,11 +326,96 @@ export default function ChatApp() {
         company: company || 'unchanged',
         year: year || 'unchanged'
       };
+    },
+    get_financial_data: () => {
+      if (!iframeRef.current || !iframeSrc) {
+        return { error: 'Iframe not loaded or not accessible' };
+      }
+
+      try {
+        const doc = iframeRef.current.contentWindow?.document;
+        if (!doc) {
+          return { error: 'Cannot access iframe document' };
+        }
+
+        // Get the company info from headers
+        const header1 = doc.getElementById('header1');
+        const header2 = doc.getElementById('header2');
+        const company1Header = header1?.textContent || 'Company 1';
+        const company2Header = header2?.textContent || 'Company 2';
+
+        // Get table body with all the financial data
+        const tableBody = doc.getElementById('table-body');
+        if (!tableBody) {
+          return { error: 'Financial data table not found' };
+        }
+
+        // Parse the table rows
+        const rows = tableBody.querySelectorAll('tr');
+        const financialNumbers = {};
+        const financialIndicators = {};
+        let currentSection = null;
+
+        rows.forEach(row => {
+          // Check if this is a section header
+          if (row.classList.contains('section-header')) {
+            const sectionText = row.textContent.trim();
+            if (sectionText.includes('Financial Numbers')) {
+              currentSection = 'numbers';
+            } else if (sectionText.includes('Financial Indicators')) {
+              currentSection = 'indicators';
+            }
+            return;
+          }
+
+          // Parse metric rows
+          if (row.classList.contains('metric-row')) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length === 3) {
+              const metricName = cells[0].textContent.trim();
+              const value1 = cells[1].textContent.trim();
+              const value2 = cells[2].textContent.trim();
+
+              const metricData = {
+                [company1Header]: value1,
+                [company2Header]: value2
+              };
+
+              if (currentSection === 'numbers') {
+                financialNumbers[metricName] = metricData;
+              } else if (currentSection === 'indicators') {
+                financialIndicators[metricName] = metricData;
+              }
+            }
+          }
+        });
+
+        // Check if we got any data
+        if (Object.keys(financialNumbers).length === 0 && Object.keys(financialIndicators).length === 0) {
+          return {
+            error: 'No financial data available. Please select companies to compare.',
+            company1: company1Header,
+            company2: company2Header
+          };
+        }
+
+        return {
+          summary: `Financial data for ${company1Header} vs ${company2Header}`,
+          company1: company1Header,
+          company2: company2Header,
+          financial_numbers: financialNumbers,
+          financial_indicators: financialIndicators,
+          note: 'All values are displayed exactly as shown to the user with rounding applied. Financial numbers are in thousands of dollars.'
+        };
+      } catch (e) {
+        console.error('Error extracting financial data:', e);
+        return { error: `Failed to extract financial data: ${e.message}` };
+      }
     }
   };
 
   // Local tools array (add addNumbersTool here if uncommenting the example above)
-  const localTools = [getSelectedCompanyTool, setSelectedCompanyTool];
+  const localTools = [getSelectedCompanyTool, setSelectedCompanyTool, getFinancialDataTool];
 
   // MCP Manager for remote tool servers
   const {
