@@ -77,30 +77,30 @@ When you call **get_selected_company**, you'll receive information like:
 
 The student sees a side-by-side comparison table with this data:
 
-|  | Macy's (2023) | Costco (2022) |
-| :---- | :---- | :---- |
-| **Financial Numbers (in thousands)** |  |  |
-| Total Revenue | $23,866,000 | $226,954,000 |
-| Cost of Goods | $14,143,000 | $199,382,000 |
-| Gross Margin | $9,723,000 | $27,572,000 |
-| Selling, General & Administrative Expenses | $8,375,000 | $19,779,000 |
-| Operating Profit | $382,000 | $7,793,000 |
-| Net Profit | $105,000 | $5,844,000 |
-| Inventory | $4,361,000 | $17,907,000 |
-| Total Assets | $16,246,000 | $64,166,000 |
-| **Financial Indicators** |  |  |
-| Cost of goods percentage (COGS/Net Sales) | 59.3% | 87.9% |
-| Gross margin percentage (GM/Net Sales) | 40.7% | 12.1% |
-| SG\&A expense percentage (SG\&A/Net Sales) | 35.1% | 8.7% |
-| Operating profit margin percentage (Op.Profit/Net Sales) | 1.6% | 3.4% |
-| Net profit margin percentage (Net Profit/Net Sales) | 0.4% | 2.6% |
-| Inventory turnover (COGS/Inventory) | 3.2 | 11.1 |
-| Current Ratio (Current Assets/Current Liabilities) | 1.4 | 1.0 |
-| Quick Ratio ((Cash \+ AR)/Current Liabilities) | 0.4 | 0.5 |
-| Debt-to-Equity Ratio (Total Debt/Total Equity) | 2.9 | 2.1 |
-| Asset turnover (Net Sales/Total Assets) | 1.5 | 3.5 |
-| Return on assets (ROA) | 0.6% | 9.1% |
-| 3-Year Revenue CAGR | 9.7% | 14.1% |
+| Metric                                                   | Macy's (2023)  | Costco (2022)   |
+| :------------------------------------------------------- | :------------- | :-------------- |
+| **Financial Numbers (in thousands)**                     |                |                 |
+| Total Revenue                                            | $23,866,000    | $226,954,000    |
+| Cost of Goods                                            | $14,143,000    | $199,382,000    |
+| Gross Margin                                             | $9,723,000     | $27,572,000     |
+| Selling, General & Administrative Expenses               | $8,375,000     | $19,779,000     |
+| Operating Profit                                         | $382,000       | $7,793,000      |
+| Net Profit                                               | $105,000       | $5,844,000      |
+| Inventory                                                | $4,361,000     | $17,907,000     |
+| Total Assets                                             | $16,246,000    | $64,166,000     |
+| **Financial Indicators**                                 |                |                 |
+| Cost of goods percentage (COGS/Net Sales)                | 59.3%          | 87.9%           |
+| Gross margin percentage (GM/Net Sales)                   | 40.7%          | 12.1%           |
+| SG&A expense percentage (SG&A/Net Sales)                 | 35.1%          | 8.7%            |
+| Operating profit margin percentage (Op.Profit/Net Sales) | 1.6%           | 3.4%            |
+| Net profit margin percentage (Net Profit/Net Sales)      | 0.4%           | 2.6%            |
+| Inventory turnover (COGS/Inventory)                      | 3.2            | 11.1            |
+| Current Ratio (Current Assets/Current Liabilities)       | 1.4            | 1.0             |
+| Quick Ratio ((Cash + AR)/Current Liabilities)            | 0.4            | 0.5             |
+| Debt-to-Equity Ratio (Total Debt/Total Equity)           | 2.9            | 2.1             |
+| Asset turnover (Net Sales/Total Assets)                  | 1.5            | 3.5             |
+| Return on assets (ROA)                                   | 0.6%           | 9.1%            |
+| 3-Year Revenue CAGR                                      | 9.7%           | 14.1%           |
 
 ---
 
@@ -174,109 +174,109 @@ The database `calvinw/BusMgmtBenchmarks/main` contains comprehensive financial d
 
 ### Database Schema Details
 
-### 1\. `company_info`
+### 1. `company_info`
 
 *Contains company metadata and classification.*
 
-| Field | Type | Null | Key | Default |
-| :---- | :---- | :---- | :---- | :---- |
-| company | varchar(255) | NO | PRI | NULL |
-| CIK | int | YES |  | NULL |
-| display\_name | varchar(255) | NO |  | NULL |
-| ticker\_symbol | varchar(10) | NO |  | NULL |
-| segment | varchar(255) | YES |  | NULL |
-| subsegment | varchar(255) | YES |  | NULL |
-| currency | varchar(10) | YES |  | NULL |
-| units | varchar(50) | YES |  | NULL |
+| Field         | Type         | Null | Key | Default |
+| :------------ | :----------- | :--- | :-- | :------ |
+| company       | varchar(255) | NO   | PRI | NULL    |
+| CIK           | int          | YES  |     | NULL    |
+| display_name  | varchar(255) | NO   |     | NULL    |
+| ticker_symbol | varchar(10)  | NO   |     | NULL    |
+| segment       | varchar(255) | YES  |     | NULL    |
+| subsegment    | varchar(255) | YES  |     | NULL    |
+| currency      | varchar(10)  | YES  |     | NULL    |
+| units         | varchar(50)  | YES  |     | NULL    |
 
-### 2\. `financials`
+### 2. `financials`
 
 *Raw dollar values from financial statements.*
 
-| Field | Type | Null | Key | Default |
-| :---- | :---- | :---- | :---- | :---- |
-| company\_name | varchar(255) | NO | PRI | NULL |
-| year | int | NO | PRI | NULL |
-| reportDate | date | NO |  | NULL |
-| Net Revenue | bigint | YES |  | NULL |
-| Cost of Goods | bigint | YES |  | NULL |
-| Gross Margin | bigint | YES |  | NULL |
-| SGA | bigint | YES |  | NULL |
-| Operating Profit | bigint | YES |  | NULL |
-| Net Profit | bigint | YES |  | NULL |
-| Inventory | bigint | YES |  | NULL |
-| Current Assets | bigint | YES |  | NULL |
-| Total Assets | bigint | YES |  | NULL |
-| Current Liabilities | bigint | YES |  | NULL |
-| Liabilities | bigint | YES |  | NULL |
-| Total Shareholder Equity | bigint | YES |  | NULL |
-| Total Liabilities and Shareholder Equity | bigint | YES |  | NULL |
+| Field                                    | Type         | Null | Key | Default |
+| :--------------------------------------- | :----------- | :--- | :-- | :------ |
+| company_name                             | varchar(255) | NO   | PRI | NULL    |
+| year                                     | int          | NO   | PRI | NULL    |
+| reportDate                               | date         | NO   |     | NULL    |
+| Net Revenue                              | bigint       | YES  |     | NULL    |
+| Cost of Goods                            | bigint       | YES  |     | NULL    |
+| Gross Margin                             | bigint       | YES  |     | NULL    |
+| SGA                                      | bigint       | YES  |     | NULL    |
+| Operating Profit                         | bigint       | YES  |     | NULL    |
+| Net Profit                               | bigint       | YES  |     | NULL    |
+| Inventory                                | bigint       | YES  |     | NULL    |
+| Current Assets                           | bigint       | YES  |     | NULL    |
+| Total Assets                             | bigint       | YES  |     | NULL    |
+| Current Liabilities                      | bigint       | YES  |     | NULL    |
+| Liabilities                              | bigint       | YES  |     | NULL    |
+| Total Shareholder Equity                 | bigint       | YES  |     | NULL    |
+| Total Liabilities and Shareholder Equity | bigint       | YES  |     | NULL    |
 
-### 3\. `financial_metrics`
+### 3. `financial_metrics`
 
 *Calculated performance ratios for companies.*
 
-| Field | Type | Null | Key | Default |
-| :---- | :---- | :---- | :---- | :---- |
-| company\_name | varchar(255) | NO | PRI | NULL |
-| year | int | NO | PRI | NULL |
-| Cost\_of\_Goods\_Percentage | decimal(10,4) | YES |  | NULL |
-| SGA\_Percentage | decimal(10,4) | YES |  | NULL |
-| Gross\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Operating\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Net\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Inventory\_Turnover | decimal(10,4) | YES |  | NULL |
-| Asset\_Turnover | decimal(10,4) | YES |  | NULL |
-| Return\_on\_Assets | decimal(10,4) | YES |  | NULL |
-| Three\_Year\_Revenue\_CAGR | decimal(10,4) | YES |  | NULL |
-| Current\_Ratio | decimal(10,4) | YES |  | NULL |
-| Quick\_Ratio | decimal(10,4) | YES |  | NULL |
-| Sales\_Current\_Year\_vs\_LY | decimal(10,4) | YES |  | NULL |
-| Debt\_to\_Equity | decimal(10,4) | YES |  | NULL |
+| Field                            | Type          | Null | Key | Default |
+| :------------------------------- | :------------ | :--- | :-- | :------ |
+| company_name                     | varchar(255)  | NO   | PRI | NULL    |
+| year                             | int           | NO   | PRI | NULL    |
+| Cost_of_Goods_Percentage         | decimal(10,4) | YES  |     | NULL    |
+| SGA_Percentage                   | decimal(10,4) | YES  |     | NULL    |
+| Gross_Margin_Percentage          | decimal(10,4) | YES  |     | NULL    |
+| Operating_Profit_Margin_Percentage | decimal(10,4) | YES  |     | NULL    |
+| Net_Profit_Margin_Percentage     | decimal(10,4) | YES  |     | NULL    |
+| Inventory_Turnover               | decimal(10,4) | YES  |     | NULL    |
+| Asset_Turnover                   | decimal(10,4) | YES  |     | NULL    |
+| Return_on_Assets                 | decimal(10,4) | YES  |     | NULL    |
+| Three_Year_Revenue_CAGR          | decimal(10,4) | YES  |     | NULL    |
+| Current_Ratio                    | decimal(10,4) | YES  |     | NULL    |
+| Quick_Ratio                      | decimal(10,4) | YES  |     | NULL    |
+| Sales_Current_Year_vs_LY         | decimal(10,4) | YES  |     | NULL    |
+| Debt_to_Equity                   | decimal(10,4) | YES  |     | NULL    |
 
-### 4\. `segment_metrics`
+### 4. `segment_metrics`
 
 *Benchmark ratios aggregated by industry segment.*
 
-| Field | Type | Null | Key | Default |
-| :---- | :---- | :---- | :---- | :---- |
-| segment | varchar(255) | NO | PRI | NULL |
-| year | int | NO | PRI | 2024 |
-| Cost\_of\_Goods\_Percentage | decimal(10,4) | YES |  | NULL |
-| SGA\_Percentage | decimal(10,4) | YES |  | NULL |
-| Gross\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Operating\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Net\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Inventory\_Turnover | decimal(10,4) | YES |  | NULL |
-| Asset\_Turnover | decimal(10,4) | YES |  | NULL |
-| Return\_on\_Assets | decimal(10,4) | YES |  | NULL |
-| Three\_Year\_Revenue\_CAGR | decimal(10,4) | YES |  | NULL |
-| Current\_Ratio | decimal(10,4) | YES |  | NULL |
-| Quick\_Ratio | decimal(10,4) | YES |  | NULL |
-| Sales\_Current\_Year\_vs\_LY | decimal(10,4) | YES |  | NULL |
-| Debt\_to\_Equity | decimal(10,4) | YES |  | NULL |
+| Field                            | Type          | Null | Key | Default |
+| :------------------------------- | :------------ | :--- | :-- | :------ |
+| segment                          | varchar(255)  | NO   | PRI | NULL    |
+| year                             | int           | NO   | PRI | 2024    |
+| Cost_of_Goods_Percentage         | decimal(10,4) | YES  |     | NULL    |
+| SGA_Percentage                   | decimal(10,4) | YES  |     | NULL    |
+| Gross_Margin_Percentage          | decimal(10,4) | YES  |     | NULL    |
+| Operating_Profit_Margin_Percentage | decimal(10,4) | YES  |     | NULL    |
+| Net_Profit_Margin_Percentage     | decimal(10,4) | YES  |     | NULL    |
+| Inventory_Turnover               | decimal(10,4) | YES  |     | NULL    |
+| Asset_Turnover                   | decimal(10,4) | YES  |     | NULL    |
+| Return_on_Assets                 | decimal(10,4) | YES  |     | NULL    |
+| Three_Year_Revenue_CAGR          | decimal(10,4) | YES  |     | NULL    |
+| Current_Ratio                    | decimal(10,4) | YES  |     | NULL    |
+| Quick_Ratio                      | decimal(10,4) | YES  |     | NULL    |
+| Sales_Current_Year_vs_LY         | decimal(10,4) | YES  |     | NULL    |
+| Debt_to_Equity                   | decimal(10,4) | YES  |     | NULL    |
 
-### 5\. `subsegment_metrics`
+### 5. `subsegment_metrics`
 
 *Benchmark ratios aggregated by niche subsegment.*
 
-| Field | Type | Null | Key | Default |
-| :---- | :---- | :---- | :---- | :---- |
-| subsegment | varchar(255) | NO | PRI | NULL |
-| year | int | NO | PRI | 2024 |
-| Cost\_of\_Goods\_Percentage | decimal(10,4) | YES |  | NULL |
-| SGA\_Percentage | decimal(10,4) | YES |  | NULL |
-| Gross\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Operating\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Net\_Profit\_Margin\_Percentage | decimal(10,4) | YES |  | NULL |
-| Inventory\_Turnover | decimal(10,4) | YES |  | NULL |
-| Asset\_Turnover | decimal(10,4) | YES |  | NULL |
-| Return\_on\_Assets | decimal(10,4) | YES |  | NULL |
-| Three\_Year\_Revenue\_CAGR | decimal(10,4) | YES |  | NULL |
-| Current\_Ratio | decimal(10,4) | YES |  | NULL |
-| Quick\_Ratio | decimal(10,4) | YES |  | NULL |
-| Sales\_Current\_Year\_vs\_LY | decimal(10,4) | YES |  | NULL |
-| Debt\_to\_Equity | decimal(10,4) | YES |  | NULL |
+| Field                            | Type          | Null | Key | Default |
+| :------------------------------- | :------------ | :--- | :-- | :------ |
+| subsegment                       | varchar(255)  | NO   | PRI | NULL    |
+| year                             | int           | NO   | PRI | 2024    |
+| Cost_of_Goods_Percentage         | decimal(10,4) | YES  |     | NULL    |
+| SGA_Percentage                   | decimal(10,4) | YES  |     | NULL    |
+| Gross_Margin_Percentage          | decimal(10,4) | YES  |     | NULL    |
+| Operating_Profit_Margin_Percentage | decimal(10,4) | YES  |     | NULL    |
+| Net_Profit_Margin_Percentage     | decimal(10,4) | YES  |     | NULL    |
+| Inventory_Turnover               | decimal(10,4) | YES  |     | NULL    |
+| Asset_Turnover                   | decimal(10,4) | YES  |     | NULL    |
+| Return_on_Assets                 | decimal(10,4) | YES  |     | NULL    |
+| Three_Year_Revenue_CAGR          | decimal(10,4) | YES  |     | NULL    |
+| Current_Ratio                    | decimal(10,4) | YES  |     | NULL    |
+| Quick_Ratio                      | decimal(10,4) | YES  |     | NULL    |
+| Sales_Current_Year_vs_LY         | decimal(10,4) | YES  |     | NULL    |
+| Debt_to_Equity                   | decimal(10,4) | YES  |     | NULL    |
 
 ---
 
