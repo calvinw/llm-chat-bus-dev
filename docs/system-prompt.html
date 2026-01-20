@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Prompt - Financial Comparison Assistant</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f8f9fa;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3, h4 {
+      color: #1a1a1a;
+      margin-top: 1.5em;
+    }
+    h1 {
+      border-bottom: 2px solid #e1e4e8;
+      padding-bottom: 0.3em;
+    }
+    h2 {
+      border-bottom: 1px solid #e1e4e8;
+      padding-bottom: 0.3em;
+    }
+    code {
+      background: #f1f3f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+      font-size: 0.9em;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #f1f3f5;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    blockquote {
+      border-left: 4px solid #3b82f6;
+      margin: 1em 0;
+      padding: 0.5em 1em;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #e1e4e8;
+      margin: 2em 0;
+    }
+    strong {
+      color: #1a1a1a;
+    }
+    a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .error {
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .header a {
+      font-size: 0.9em;
+      padding: 6px 12px;
+      background: #3b82f6;
+      color: white;
+      border-radius: 4px;
+    }
+    .header a:hover {
+      background: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span>System Prompt Documentation</span>
+      <a href="./">Back to App</a>
+    </div>
+    <div id="content">
+      <div class="loading">Loading system prompt...</div>
+    </div>
+  </div>
+
+  <script>
+    async function loadPrompt() {
+      const contentEl = document.getElementById('content');
+      try {
+        const response = await fetch('./llm_prompt.md');
+        if (!response.ok) {
+          throw new Error(`Failed to load: ${response.status}`);
+        }
+        const markdown = await response.text();
+        contentEl.innerHTML = marked.parse(markdown);
+      } catch (error) {
+        contentEl.innerHTML = `<div class="error">Error loading system prompt: ${error.message}</div>`;
+      }
+    }
+    loadPrompt();
+  </script>
+</body>
+</html>
