@@ -129,7 +129,7 @@ const getFinancialDataTool = {
   type: "function",
   function: {
     name: "get_financial_data",
-    description: "Get the actual financial data currently displayed in the comparison table, including all metrics with their rounded/formatted values exactly as shown to the user. This is critical for doing calculations with students using the same numbers they see. Returns financial numbers (revenue, costs, assets) and financial indicators (ratios, percentages) for both companies.",
+    description: "Get the financial data currently displayed in the comparison table. Returns financial numbers (revenue, costs, assets) and financial indicators (ratios, percentages) for both companies. Call once to retrieve the data.",
     parameters: {
       type: "object",
       properties: {},

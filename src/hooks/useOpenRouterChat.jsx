@@ -321,7 +321,7 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
           ...toolResults.map(tr => ({
             role: 'tool',
             tool_call_id: tr.tool_call_id,
-            content: tr.output?.summary || (tr.output ? JSON.stringify(tr.output) : tr.errorText)
+            content: tr.output ? JSON.stringify(tr.output) : tr.errorText
           }))
         ];
       }
