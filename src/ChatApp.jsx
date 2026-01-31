@@ -37,11 +37,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
 import { SYSTEM_PROMPT } from '@/utils/systemPrompt';
+import { exportConversationAsMarkdown, downloadMarkdown } from '@/utils/exportMarkdown';
 import {
   Panel,
   Group,
@@ -471,6 +472,20 @@ export default function ChatApp() {
     clearMessages();
   };
 
+  // Export conversation as markdown (detailed)
+  const handleExportConversation = () => {
+    const md = exportConversationAsMarkdown(messages);
+    const timestamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
+    downloadMarkdown(md, `conversation-${timestamp}.md`);
+  };
+
+  // Export conversation as markdown (compact — no tool details)
+  const handleExportCompact = () => {
+    const md = exportConversationAsMarkdown(messages, { compact: true });
+    const timestamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
+    downloadMarkdown(md, `conversation-compact-${timestamp}.md`);
+  };
+
   const selectedModelName = selectedModel;
   const mcpStatusClassName = mcpConnectionStatus === 'connected'
     ? 'border-green-600 text-green-600'
@@ -533,6 +548,24 @@ export default function ChatApp() {
               >
                 <RotateCcw className="size-4 mr-2" />
                 New Chat
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExportCompact}
+                disabled={messages.length === 0}
+              >
+                <FileDown className="size-4 mr-2" />
+                Save Chat
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExportConversation}
+                disabled={messages.length === 0}
+              >
+                <Download className="size-4 mr-2" />
+                Save Full
               </Button>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
