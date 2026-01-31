@@ -41,6 +41,7 @@ import { MessageSquare, RotateCcw, Settings, ExternalLink } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
+import { SYSTEM_PROMPT } from '@/utils/systemPrompt';
 import {
   Panel,
   Group,
@@ -154,11 +155,9 @@ const getFinancialDataTool = {
 
 // Suggested prompts for quick testing
   const SUGGESTED_PROMPTS = [
-    'Can you describe your tools to me',
-    'What companies are being compared?',
-    'Show me the financial data currently displayed',
-    'Compare Costco 2023 with Target 2023',
-    'Can you help me calculate ROA using the displayed values?',
+    'Can you do a ROA breakdown for these companies?',
+    'Can you help me compare the two companies shown',
+    'Can you explain the tradeoffs between high margin/low turn and low margin/high turn approaches for businesses',
   ];
 
 
@@ -459,12 +458,12 @@ export default function ChatApp() {
   // Handle form submission from PromptInput
   const handleSubmit = async (message) => {
     if (!message.text?.trim()) return;
-    await sendMessage(message.text, { model: selectedModel });
+    await sendMessage(message.text, { model: selectedModel, systemPrompt: SYSTEM_PROMPT });
   };
 
   // Handle suggested prompt click
   const handleSuggestedPrompt = async (prompt) => {
-    await sendMessage(prompt, { model: selectedModel });
+    await sendMessage(prompt, { model: selectedModel, systemPrompt: SYSTEM_PROMPT });
   };
 
   // Clear conversation
@@ -700,12 +699,24 @@ export default function ChatApp() {
               <ConversationContent>
                 {messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-center">
-                    <div className="max-w-md space-y-2">
+                    <div className="max-w-lg space-y-4">
                       <MessageSquare className="mx-auto size-12 text-muted-foreground" />
                       <h2 className="text-lg font-semibold">Start a conversation</h2>
                       <p className="text-sm text-muted-foreground">
-                        Type a message below to test the UI
+                        Ask about financial analysis, ROA breakdown, or company comparisons
                       </p>
+                      <div className="flex flex-col gap-2 pt-2">
+                        {SUGGESTED_PROMPTS.map((prompt, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSuggestedPrompt(prompt)}
+                            className="text-sm px-4 py-2.5 rounded-lg bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border text-left"
+                            disabled={isLoading}
+                          >
+                            {prompt}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -730,7 +741,7 @@ export default function ChatApp() {
           </div>
 
           {/* Input Area */}
-          <div className="border-t p-4 space-y-3">
+          <div className="border-t p-4">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
                 <PromptInputTextarea placeholder="Type your message..." />
@@ -744,20 +755,6 @@ export default function ChatApp() {
                 <PromptInputSubmit status={status} />
               </PromptInputFooter>
             </PromptInput>
-
-            {/* Suggested Prompts */}
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTED_PROMPTS.map((prompt, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSuggestedPrompt(prompt)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border"
-                  disabled={isLoading}
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </Panel>
