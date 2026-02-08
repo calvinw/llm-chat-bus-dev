@@ -3,290 +3,184 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is a React-based LLM chat interface component that uses OpenRouter's API. The application supports streaming responses, multiple models, markdown rendering with MathJax support, tool calling, and MCP (Model Context Protocol) integration. Built with React 19, Vite, Tailwind CSS 4, and Radix UI components.
+This is the **FIT Retail Index Chat** — a React-based LLM chat application that integrates with a financial comparison webapp (BusMgmtBenchmarks) via an iframe. It uses OpenRouter's API to let undergraduate business students compare company financial data through conversational AI. The chat can read and control the iframe's company/year selections and extract financial table data using tool calling. Built with React 19, Vite 7, Tailwind CSS 4, and Radix UI components.
 
 ## Common Commands
 
-**Development Server:**
+**Development:**
 ```bash
-npm run dev          # Starts Vite dev server on port 8081 with hot reload
+npm run dev              # Starts Vite dev server on port 8081 with hot reload
+npm run dev:busmgmt      # Starts the BusMgmt submodule dev server
 ```
 
 **Production Build:**
 ```bash
-npm run build        # Builds to /docs directory for deployment
-npm run preview      # Preview production build
+npm run build            # Full build: wrapper + BusMgmt submodule + sync assets to /docs
+npm run build:wrapper    # Build only the chat wrapper app
+npm run build:busmgmt    # Build only the BusMgmt submodule
+npm run sync:busmgmt     # Copy BusMgmt build assets into docs/busmgmt/
+npm run preview          # Preview production build
+```
+
+**Setup:**
+```bash
+npm run setup:integration  # Init git submodule + install BusMgmt dependencies
 ```
 
 ## Architecture
 
 ### Core Structure
-This is a **React component library** designed as a reusable chat interface. The main export is `LLMChatInterface.jsx` which can be embedded in other React applications or used standalone.
+This is a **monolithic chat application** with an integrated iframe for financial data visualization. The main component is `ChatApp.jsx`, which manages all application state internally (no props API). It uses a split-pane layout with the BusMgmt comparison app on the left and the chat interface on the right.
 
 ### Key Components
 
-**Main Component (`LLMChatInterface.jsx`):**
+**Main Component (`ChatApp.jsx`):**
 - Root component that orchestrates all chat functionality
-- Manages API key persistence in localStorage
-- Handles display modes (markdown/text) and error states
-- Uses composition pattern with custom hooks for functionality
-- Supports configurable sidebar position (left/right)
+- Manages settings (API key, model, MCP URL, iframe URL) in localStorage
+- Defines tool definitions and handlers for interacting with the iframe
+- Uses `react-resizable-panels` for split-pane layout (iframe + chat)
+- Communicates with iframe via postMessage bridge (with DOM fallback for same-origin)
+- Includes suggested prompts for quick testing
+- Supports conversation export to markdown (compact and detailed)
 
-**Custom Hooks Architecture:**
-- **`useChatEngine.jsx`**: Core chat logic with streaming support, message management, and OpenRouter API integration
-- **`useModelManager.jsx`**: Handles fetching available models from OpenRouter API or using custom model lists
-- **`useMarkdownRenderer.jsx`**: Manages markdown rendering with MathJax support
-- **`useToolManager.jsx`**: Manages parallel tool execution with error handling and validation
-- **`useMCPManager.jsx`**: Manages MCP (Model Context Protocol) server connections and remote tools
-- **`useStreamingEngine.jsx`**: Handles streaming response processing and throttling
+**Custom Hooks:**
+- **`useOpenRouterChat.jsx`**: Core chat logic — direct fetch to OpenRouter API with SSE streaming, parallel tool execution via `Promise.all`, unlimited tool call chaining (up to 20 rounds), and AI Elements compatible parts structure
+- **`useModelManager.jsx`**: Fetches available models from OpenRouter API with fallback defaults (GPT-4o Mini, GPT-4o, Claude 3.5 Sonnet)
+- **`useMCPManager.jsx`**: Manages MCP server connections with auto-detection of transport type (streamable-http vs SSE legacy), debounced connection (1s)
 
-**Component Structure:**
-- **`Sidebar.jsx`**: Model selection, API key input, MCP configuration, display mode toggle
-- **`MessagesContainer.jsx`**: Message display with auto-scrolling and streaming support
-- **`MessageInput.jsx`**: Input area with send functionality and auto-resize
-- **`Message.jsx`**: Individual message rendering with tool execution display
-- **`ErrorDisplay.jsx`**: Error handling and display
-- **`TabHeader.jsx`**: Tab navigation for different views
-- **`SystemPromptTab.jsx`**: System prompt configuration
-- **`ui/`**: Radix UI components (Button, Select, Dialog, etc.)
-- **`ai-elements/`**: AI-specific UI elements (code blocks, loaders, etc.)
+**AI Element Components (`components/ai-elements/`):**
+- **`conversation.jsx`**: Conversation wrapper with auto-scroll (uses `use-stick-to-bottom`)
+- **`message.jsx`**: Message display with `MessageContent`, `MessageResponse`, `MessageActions`, `MessageBranch`
+- **`prompt-input.jsx`**: Input area with `PromptInputTextarea`, `PromptInputSubmit`, `PromptInputFooter`, `PromptInputTools`
+- **`tool.jsx`**: Tool execution display with `ToolHeader`, `ToolContent`, `ToolInput`, `ToolOutput`
+- **`code-block.jsx`**: Syntax-highlighted code blocks using Shiki (`github-dark` theme)
+- **`loader.jsx`**: Loading indicators
+- **`reasoning.jsx`**: Reasoning display
+- **`sources.jsx`**: Source citations
+- **`suggestion.jsx`**: Suggested prompts
+- **`shimmer.jsx`**: Shimmer loading effect
+- **`model-selector.jsx`**: Model selection component
+
+**UI Components (`components/ui/`):**
+Radix UI wrapper components: `avatar`, `badge`, `button`, `button-group`, `card`, `collapsible`, `command`, `dialog`, `dropdown-menu`, `hover-card`, `input`, `input-group`, `label`, `scroll-area`, `select`, `separator`, `sheet`, `textarea`, `tooltip`
 
 **Utilities:**
-- **`apiClient.jsx`**: OpenRouter API client with streaming and non-streaming support
-- **`mcpClient.jsx`**: MCP protocol client for external tool servers
-- **`httpClient.jsx`**: HTTP utility functions
-- **`mathProcessor.jsx`**: MathJax integration utilities
-- **`constants.jsx`**: Application constants and configuration
-- **`lib/utils.js`**: Helper functions and utilities
+- **`mcpClient.jsx`**: MCP protocol client with dual transport support (streamable-http and SSE legacy) and auto-detection
+- **`httpClient.jsx`**: HTTP utility functions (POST/GET, MCP headers, SSE parsing)
+- **`mathProcessor.jsx`**: KaTeX math preprocessing — protects LaTeX expressions (`$$...$$`, `$...$`, `\[...\]`, `\(...\)`) from markdown corruption using placeholder replacement
+- **`exportMarkdown.jsx`**: Conversation export to markdown with compact and detailed modes
+- **`systemPrompt.js`**: System prompt module for the financial comparison assistant (role, data architecture, tool instructions, database schema, industry context for 56 retail companies across 10 segments)
+- **`lib/utils.js`**: `cn()` helper for class name merging (clsx + tailwind-merge)
+
+### Iframe Bridge Architecture
+The chat communicates with the BusMgmt iframe using a postMessage bridge:
+- **Request type**: `busmgmt.bridge.request`
+- **Response type**: `busmgmt.bridge.response`
+- **Actions**: `get_selection`, `set_selection`, `get_financial_data`
+- Falls back to direct DOM access for same-origin iframes
+- Dev default: `http://localhost:3000/company_to_company.html`
+- Prod default: `./busmgmt/company_to_company.html`
+
+### Tool Calling
+Three built-in tools interact with the BusMgmt iframe:
+
+- **`get_selected_company`**: Gets the current company/year dropdown selections from the comparison iframe
+- **`set_selected_company`**: Sets company and/or year dropdown selections (company1, year1, company2, year2). Valid years: 2018-2024
+- **`get_financial_data`**: Extracts the financial comparison table data (financial numbers and indicators for both companies)
+
+Tools follow the OpenAI function calling format. MCP remote tools are merged with local tools at runtime.
+
+### MCP (Model Context Protocol)
+- **Dual transport**: Streamable HTTP and SSE legacy with auto-detection
+- **Default server**: `https://bus-mgmt-databases.mcp.mathplosion.com/mcp-dolt-database/sse`
+- **Auto-discovery**: Tools discovered from connected servers and merged with local tools
+- **CORS proxy support**: Optional proxy for cross-origin MCP servers
+- **Python server**: Example MCP server included (`mcp_server.py`)
 
 ### Key Features
-- **React 19** - Latest React with modern hooks and features
-- **Vite Build System** - Fast development and optimized production builds
-- **Tailwind CSS 4** - Utility-first CSS with Vite plugin
-- **Radix UI** - Accessible, customizable component primitives
-- **Streaming Responses** - Real-time message streaming with throttled updates
-- **Tool Calling** - Parallel tool execution with local and remote (MCP) tools
-- **Math Rendering** - MathJax support for LaTeX expressions with $ and $$ delimiters
-- **State Management** - Custom hooks pattern for modular state management
-- **API Integration** - OpenRouter API with proper CORS headers and error handling
-- **Component Reusability** - Designed as embeddable React component with props API
-
-### Development Notes
-- Uses React 19.2.1 with JSX syntax
-- Vite 7 for development server and production builds
-- No external state management library - uses React's built-in hooks
-- CSS handled by Tailwind CSS 4 with Vite plugin
-- All files use `.jsx` extension for React components
-- API key persisted in localStorage with automatic state synchronization
-- Tool execution logs displayed in browser console for debugging
-- Development server runs on port 8081
-- Production builds output to `/docs` directory for GitHub Pages
+- **React 19** with JSX syntax
+- **Vite 7** for development and production builds
+- **Tailwind CSS 4** with Vite plugin
+- **Radix UI** accessible component primitives
+- **Streaming Responses** via SSE with real-time message updates
+- **Tool Calling** with parallel execution and chaining (up to 20 rounds)
+- **Math Rendering** using KaTeX (`remark-math` + `rehype-katex`) for LaTeX expressions
+- **Code Highlighting** using Shiki with `github-dark` theme
+- **Markdown Rendering** using `markdown-it` and `streamdown` for streaming incremental rendering
+- **Resizable Split Pane** layout with iframe + chat panels
+- **Conversation Export** to markdown (compact and detailed modes)
+- **Lucide React** icons throughout the UI
+- **Motion** (Framer Motion) for animations
 
 ### File Structure
 ```
 src/
-├── main.jsx                    # App entry point with tool examples
-├── LLMChatInterface.jsx        # Main chat component
+├── main.jsx                    # App entry point (renders ChatApp)
+├── ChatApp.jsx                 # Main chat application component
 ├── index.css                   # Global styles and Tailwind imports
-├── components/                 # React components
-│   ├── Sidebar.jsx            # Model selection & settings
-│   ├── MessagesContainer.jsx  # Message display
-│   ├── MessageInput.jsx       # Input area
-│   ├── Message.jsx            # Individual message
-│   ├── ErrorDisplay.jsx       # Error handling
-│   ├── TabHeader.jsx          # Tab navigation
-│   ├── SystemPromptTab.jsx    # System prompt config
-│   ├── ui/                    # Radix UI components
-│   └── ai-elements/           # AI-specific UI elements
-├── hooks/                      # Custom React hooks
-│   ├── useChatEngine.jsx      # Core chat logic
-│   ├── useModelManager.jsx    # Model fetching
-│   ├── useMarkdownRenderer.jsx # Markdown/math rendering
-│   ├── useMCPManager.jsx      # MCP protocol
-│   ├── useStreamingEngine.jsx # Streaming responses
-│   └── useToolManager.jsx     # Tool execution
-├── utils/                      # Utilities
-│   ├── apiClient.jsx          # OpenRouter API
-│   ├── mcpClient.jsx          # MCP client
-│   ├── httpClient.jsx         # HTTP utilities
-│   ├── mathProcessor.jsx      # MathJax integration
-│   └── constants.jsx          # App constants
-└── lib/
-    └── utils.js               # Helper functions
+├── components/
+│   ├── ai-elements/            # AI chat UI components
+│   │   ├── conversation.jsx    # Conversation wrapper with auto-scroll
+│   │   ├── message.jsx         # Message display
+│   │   ├── prompt-input.jsx    # Chat input area
+│   │   ├── tool.jsx            # Tool execution display
+│   │   ├── code-block.jsx      # Syntax-highlighted code blocks
+│   │   ├── loader.jsx          # Loading indicators
+│   │   ├── reasoning.jsx       # Reasoning display
+│   │   ├── sources.jsx         # Source citations
+│   │   ├── suggestion.jsx      # Suggested prompts
+│   │   ├── shimmer.jsx         # Shimmer loading effect
+│   │   └── model-selector.jsx  # Model selection
+│   └── ui/                     # Radix UI wrapper components (19 files)
+├── hooks/
+│   ├── useOpenRouterChat.jsx   # Core chat logic with streaming + tool calling
+│   ├── useModelManager.jsx     # OpenRouter model fetching
+│   └── useMCPManager.jsx       # MCP server connection management
+├── utils/
+│   ├── mcpClient.jsx           # MCP protocol client (dual transport)
+│   ├── httpClient.jsx          # HTTP utilities
+│   ├── mathProcessor.jsx       # KaTeX math preprocessing
+│   ├── exportMarkdown.jsx      # Conversation export
+│   └── systemPrompt.js         # Financial assistant system prompt
+├── lib/
+│   └── utils.js                # cn() helper function
+integrations/
+└── BusMgmtBenchmarks/          # Git submodule - financial comparison webapp
+scripts/
+└── sync-busmgmt-assets.mjs     # Copies BusMgmt build output to docs/busmgmt/
 ```
 
 ### API Integration Details
 - **Base URL**: `https://openrouter.ai/api/v1/chat/completions`
-- **Streaming**: Uses Server-Sent Events with custom throttling (every 6th chunk)
-- **Headers**: Includes HTTP-Referer and X-Title for OpenRouter requirements
-- **Error Handling**: Comprehensive error handling with fallback to non-streaming mode
+- **Streaming**: Direct fetch with SSE parsing (no EventSource)
+- **Headers**: `Authorization`, `HTTP-Referer`, `X-Title` ("FIT Retail Index Chat")
 - **Default Model**: `openai/gpt-4o-mini`
-- **Dependencies**: Managed via npm, bundled by Vite
-
-### JSX Syntax
-The project uses standard React JSX:
-
-```javascript
-// JSX component
-return (
-  <div className="chat">
-    Hello {name}
-  </div>
-);
-
-// Components
-return <Component prop={value} />;
-
-// Conditional rendering
-return (
-  <>
-    {condition && <div>Content</div>}
-  </>
-);
-
-// Lists/mapping
-return (
-  <>
-    {items.map(item => (
-      <div key={item.id}>{item.name}</div>
-    ))}
-  </>
-);
-```
-
-### Deployment Options
-
-**Development:**
-- `npm run dev` - Vite development server with hot reloading (port 8081)
-
-**Production:**
-- `npm run build` - Build to `/docs` directory
-- GitHub Pages - Deploy from `/docs` folder
-- Netlify/Vercel - Connect to repository
-- Any static hosting - Upload built files from `/docs`
-
-### Component Props API
-
-The `LLMChatInterface` component accepts the following props:
-
-```jsx
-<LLMChatInterface
-  apiKey={string}                    // OpenRouter API key (uses localStorage if not provided)
-  defaultModel={string}              // Default model to use
-  systemPrompt={string}              // System prompt for conversation
-  tools={array}                      // Tool definitions (OpenAI format)
-  toolHandlers={object}              // Tool implementation functions
-  enableTools={boolean}              // Enable tool calling
-  toolChoice={string}                // Tool choice strategy ("auto", "required", "none")
-  parallelToolCalls={boolean}        // Allow parallel tool execution
-  onToolCall={function}              // Callback for tool execution events
-  customModels={array}               // Custom model list (overrides OpenRouter)
-  className={string}                 // Additional CSS classes
-  height={string}                    // Component height
-  showHeader={boolean}               // Show header section
-  showModelSelector={boolean}        // Show model selector
-  showClearButton={boolean}          // Show clear messages button
-  showDisplayModeToggle={boolean}    // Show markdown/text toggle
-  onMessage={function}               // Callback for new messages
-  onError={function}                 // Callback for errors
-  theme={string}                     // UI theme
-  sidebarPosition={string}           // Sidebar position ("left" or "right")
-/>
-```
-
-### Tool Calling
-
-Tools follow the OpenAI function calling format:
-
-```javascript
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "tool_name",
-      description: "Tool description",
-      parameters: {
-        type: "object",
-        properties: {
-          param: {
-            type: "string",
-            description: "Parameter description"
-          }
-        },
-        required: ["param"]
-      }
-    }
-  }
-];
-
-const toolHandlers = {
-  tool_name: ({ param }) => {
-    // Implementation
-    return { result: "value" };
-  }
-};
-```
-
-### MCP (Model Context Protocol)
-
-The interface supports connecting to MCP servers for remote tools:
-
-- **SSE Transport**: Server-Sent Events for streaming
-- **HTTP Transport**: Standard HTTP requests
-- **Auto-discovery**: Tools are automatically discovered from connected servers
-- **Python Server**: Example MCP server included (`mcp_server.py`)
-
-### Styling
-
-- **Tailwind CSS 4**: Utility-first CSS framework
-- **Custom CSS**: Global styles in `src/index.css`
-- **Radix UI**: Pre-styled accessible components
-- **Dark Mode**: Theme support (currently light theme)
-- **Responsive**: Mobile-first design approach
+- **API Key**: Stored in `localStorage` as `openrouter_api_key`
+- **Model Selection**: Stored in `localStorage` as `openrouter_model`
 
 ### Build Configuration
 
 **Vite Configuration (`vite.config.js`):**
 ```javascript
 {
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: { "@": "./src" }
-  },
-  base: './',              // For GitHub Pages
-  build: {
-    outDir: 'docs',        // Output directory
-    emptyOutDir: true
-  },
-  server: {
-    port: 8081
-  }
+  plugins: [react(), tailwindcss(), viteStaticCopy({ targets: [{ src: 'llm_prompt.md', dest: '.' }] })],
+  resolve: { alias: { "@": "./src" } },
+  base: './',
+  build: { outDir: 'docs', emptyOutDir: true },
+  server: { port: 8081 }
 }
 ```
 
-### Important Technical Details
+**Full build pipeline** (`npm run build`):
+1. `build:wrapper` — Vite builds the chat app to `/docs`
+2. `build:busmgmt` — Builds the BusMgmt submodule
+3. `sync:busmgmt` — Copies BusMgmt build output into `docs/busmgmt/`
 
-**Package Dependencies:**
-- React 19.2.1 and React DOM 19.2.1
-- Vite 7 for build tooling
-- Tailwind CSS 4 with Vite plugin
-- Radix UI component libraries
-- markdown-it for markdown rendering
-- MathJax 3 for math typesetting
-- Various utility libraries (nanoid, clsx, etc.)
-
-**Development Workflow:**
-1. Edit `.jsx` files in `src/`
-2. Vite hot reloads changes automatically
-3. Use browser DevTools for debugging
-4. Check console for tool execution logs
-5. Build with `npm run build` before deployment
-
-**Production Builds:**
-- Optimized and minified JavaScript
-- CSS extracted and minified
-- Assets hashed for cache busting
-- Source maps generated for debugging
-- Output in `/docs` directory
-
-This architecture provides a modern React development experience with fast development builds, optimized production output, and comprehensive feature support for LLM chat interfaces.
+### Development Notes
+- All files use `.jsx` extension for React components
+- No external state management library — uses React's built-in hooks
+- Settings persisted in localStorage (API key, model, MCP URL, iframe URL)
+- Tool execution logs displayed in browser console for debugging
+- Development server runs on port 8081
+- Production builds output to `/docs` directory for GitHub Pages deployment
+- The BusMgmt app runs on port 3000 in development (`npm run dev:busmgmt`)
