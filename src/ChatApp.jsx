@@ -116,10 +116,10 @@ function resolveIframeSource(candidate) {
 /**
  * Tool definition for getting selected companies and years
  */
-const getSelectedCompanyTool = {
+const getSelectedCompaniesTool = {
   type: "function",
   function: {
-    name: "get_selected_company",
+    name: "get_selected_companies",
     description: "Get the current company and year selections from the financial comparison iframe. Returns company1, year1, company2, and year2 for the two companies being compared.",
     parameters: {
       type: "object",
@@ -132,10 +132,10 @@ const getSelectedCompanyTool = {
 /**
  * Tool definition for setting selected companies and years
  */
-const setSelectedCompanyTool = {
+const setSelectedCompaniesTool = {
   type: "function",
   function: {
-    name: "set_selected_company",
+    name: "set_selected_companies",
     description: "Set the company and/or year dropdown selections in the financial comparison iframe. You can set company1/year1 for the first company and company2/year2 for the second company. Valid years: 2018-2024. Companies are loaded from the database (common ones: Amazon, Costco, Walmart, Macy's, Target, etc.).",
     parameters: {
       type: "object",
@@ -387,7 +387,7 @@ export default function ChatApp() {
     //     result: result
     //   };
     // },
-    get_selected_company: async () => {
+    get_selected_companies: async () => {
       try {
         const state = await requestIframeBridge('get_selection');
         return {
@@ -425,7 +425,7 @@ export default function ChatApp() {
         title: state.title
       };
     },
-    set_selected_company: async ({ company, year, company1, year1, company2, year2 }) => {
+    set_selected_companies: async ({ company, year, company1, year1, company2, year2 }) => {
       // Build config object supporting both old and new format
       const config = {};
       if (company1) config.company1 = company1;
@@ -562,7 +562,7 @@ export default function ChatApp() {
   };
 
   // Local tools array (add addNumbersTool here if uncommenting the example above)
-  const localTools = [getSelectedCompanyTool, setSelectedCompanyTool, getFinancialDataTool];
+  const localTools = [getSelectedCompaniesTool, setSelectedCompaniesTool, getFinancialDataTool];
 
   // MCP Manager for remote tool servers
   const {

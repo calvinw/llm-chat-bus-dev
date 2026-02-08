@@ -91,15 +91,15 @@ Three tools interact with the BusMgmt iframe:
 
 | Tool | Description |
 |------|-------------|
-| `get_selected_company` | Gets the current company/year dropdown selections |
-| `set_selected_company` | Sets company and/or year selections (company1, year1, company2, year2) |
+| `get_selected_companies` | Gets the current company/year dropdown selections |
+| `set_selected_companies` | Sets company and/or year selections (company1, year1, company2, year2) |
 | `get_financial_data` | Extracts the financial comparison table data |
 
 Tools use a postMessage bridge (`busmgmt.bridge.request` / `busmgmt.bridge.response`) with same-origin DOM fallback.
 
 ## BusMgmt Integration
 
-The financial comparison app is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
+The financial comparison app ([BusMgmtBenchmarks](https://github.com/calvinw/BusMgmtBenchmarks)) is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
 
 - **Dev iframe**: `http://localhost:3000/company_to_company.html`
 - **Prod iframe**: `./busmgmt/company_to_company.html`

@@ -84,8 +84,8 @@ The chat communicates with the BusMgmt iframe using a postMessage bridge:
 ### Tool Calling
 Three built-in tools interact with the BusMgmt iframe:
 
-- **`get_selected_company`**: Gets the current company/year dropdown selections from the comparison iframe
-- **`set_selected_company`**: Sets company and/or year dropdown selections (company1, year1, company2, year2). Valid years: 2018-2024
+- **`get_selected_companies`**: Gets the current company/year dropdown selections from the comparison iframe
+- **`set_selected_companies`**: Sets company and/or year dropdown selections (company1, year1, company2, year2). Valid years: 2018-2024
 - **`get_financial_data`**: Extracts the financial comparison table data (financial numbers and indicators for both companies)
 
 Tools follow the OpenAI function calling format. MCP remote tools are merged with local tools at runtime.
