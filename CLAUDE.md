@@ -176,11 +176,13 @@ scripts/
 2. `build:busmgmt` — Builds the BusMgmt submodule
 3. `sync:busmgmt` — Copies BusMgmt build output into `docs/busmgmt/`
 
+### Deployment
+Production deployment is handled automatically by **GitHub Actions** (`.github/workflows/deploy.yml`). On every push to `main`, the workflow checks out the repo with submodules, runs `npm run build`, and deploys to GitHub Pages. The `docs/` directory is gitignored — no build artifacts are committed to the repo.
+
 ### Development Notes
 - All files use `.jsx` extension for React components
 - No external state management library — uses React's built-in hooks
 - Settings persisted in localStorage (API key, model, MCP URL, iframe URL)
 - Tool execution logs displayed in browser console for debugging
 - Development server runs on port 8081
-- Production builds output to `/docs` directory for GitHub Pages deployment
 - The BusMgmt app runs on port 3000 in development (`npm run dev:busmgmt`)

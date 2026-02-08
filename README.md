@@ -126,11 +126,7 @@ Configure an MCP server URL in Settings to add remote database tools. The defaul
 
 ### GitHub Pages
 
-The project builds to `/docs` for GitHub Pages:
-
-1. `npm run build`
-2. Commit the `/docs` directory
-3. Enable GitHub Pages: branch `main`, folder `/docs`
+Deployment is automatic via **GitHub Actions**. On every push to `main`, the workflow (`.github/workflows/deploy.yml`) builds the app and deploys to GitHub Pages. No build artifacts are committed to the repo.
 
 ## Tech Stack
 
