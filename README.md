@@ -1,59 +1,18 @@
-# LLM Chat Interface
+# FIT Retail Index Chat
 
-A modern, feature-rich React chat interface for Large Language Models using the OpenRouter API. Built with React 19, Vite, Tailwind CSS, and Radix UI components.
+A React-based LLM chat application that integrates with the BusMgmtBenchmarks financial comparison webapp. Students can compare company financial data through conversational AI, with the chat reading and controlling an embedded iframe showing financial metrics. Built with React 19, Vite 7, Tailwind CSS 4, and Radix UI.
 
 ## Features
 
+- **Financial Data Integration** - Chat reads/controls company selections and extracts financial table data from the embedded BusMgmt app via postMessage bridge
 - **Multiple LLM Support** - Access GPT-4, Claude, Gemini, Llama, and more via OpenRouter
-- **Streaming Responses** - Real-time message streaming with throttled updates
-- **Tool Calling** - Support for function calling with parallel execution
-- **MCP Integration** - Model Context Protocol support for remote tool servers
-- **Math Rendering** - LaTeX expressions with MathJax ($inline$ and $$display$$)
-- **Markdown Support** - Full markdown rendering with syntax highlighting
-- **Responsive Design** - Mobile-friendly interface with configurable sidebar
-- **Radix UI Components** - Accessible, customizable UI components
-- **Tailwind CSS v4** - Modern utility-first styling
-
-## BusMgmt Integration
-
-- The real app is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
-- Local wrapper default iframe target: `http://localhost:3000/company_to_company.html`.
-- Production wrapper default iframe target: `./busmgmt/company_to_company.html`.
-- Wrapper tools use `postMessage` bridge first (`busmgmt.bridge.request` / `busmgmt.bridge.response`) with same-origin DOM fallback during transition.
-
-### Integration Setup
-
-```bash
-git submodule update --init --recursive
-npm install
-npm run setup:integration
-```
-
-### Local Dev (Dual Server)
-
-```bash
-# Terminal A: wrapper
-npm run dev
-
-# Terminal B: BusMgmt app
-npm run dev:busmgmt
-```
-
-### Integration Build / Preview
-
-```bash
-# Build wrapper + BusMgmt, then sync BusMgmt assets into docs/busmgmt
-npm run build
-
-# Preview integration build on localhost:4173
-npm run preview:integration
-```
-
-### Optional iframe environment overrides
-
-- `VITE_IFRAME_SRC`: full override for all modes
-- `VITE_IFRAME_SRC_DEV`: dev default (used when `VITE_IFRAME_SRC` is not set)
-- `VITE_IFRAME_SRC_PROD`: production default (used when `VITE_IFRAME_SRC` is not set)
+- **Streaming Responses** - Real-time SSE streaming with tool call chaining (up to 20 rounds)
+- **Tool Calling** - Three built-in tools for iframe interaction, plus MCP remote tools
+- **MCP Integration** - Model Context Protocol support with dual transport auto-detection
+- **Math Rendering** - LaTeX expressions with KaTeX (`$inline$` and `$$display$$`)
+- **Markdown Support** - Streaming markdown rendering with Shiki syntax highlighting
+- **Resizable Split Pane** - Side-by-side iframe + chat layout with draggable divider
+- **Conversation Export** - Save conversations as markdown (compact or detailed)
 
 ## Quick Start
 
@@ -64,324 +23,141 @@ npm run preview:integration
 ### Installation
 
 ```bash
-# Clone the repository
 git clone <repository-url>
-cd llm-chat
-
-# Install dependencies
+cd llm-chat-bus-dev
 npm install
+npm run setup:integration   # Init BusMgmt submodule + install its dependencies
 ```
 
 ### Development
 
+Run both servers in separate terminals:
+
 ```bash
-# Start development server (http://localhost:8081)
+# Terminal A: Chat wrapper (http://localhost:8081)
 npm run dev
+
+# Terminal B: BusMgmt app (http://localhost:3000)
+npm run dev:busmgmt
 ```
 
 ### Build for Production
 
 ```bash
-# Build to /docs directory (GitHub Pages ready)
+# Full build: wrapper + BusMgmt submodule + sync assets to /docs
 npm run build
 
-# Preview production build
-npm run preview
+# Preview the integrated build
+npm run preview:integration
 ```
 
 ## Project Structure
 
 ```
-llm-chat/
-├── src/
-│   ├── main.jsx                    # Application entry point
-│   ├── LLMChatInterface.jsx        # Main chat component
-│   ├── index.css                   # Global styles
-│   ├── components/                 # React components
-│   │   ├── Sidebar.jsx            # Settings and model selection
-│   │   ├── MessagesContainer.jsx  # Message display area
-│   │   ├── MessageInput.jsx       # User input component
-│   │   ├── Message.jsx            # Individual message display
-│   │   ├── ErrorDisplay.jsx       # Error handling UI
-│   │   ├── TabHeader.jsx          # Tab navigation
-│   │   ├── SystemPromptTab.jsx    # System prompt configuration
-│   │   ├── ui/                    # Radix UI components
-│   │   └── ai-elements/           # AI-specific UI elements
-│   ├── hooks/                     # Custom React hooks
-│   │   ├── useChatEngine.jsx      # Core chat logic
-│   │   ├── useModelManager.jsx    # Model fetching/management
-│   │   ├── useMarkdownRenderer.jsx # Markdown + MathJax
-│   │   ├── useToolManager.jsx     # Tool execution
-│   │   ├── useMCPManager.jsx      # MCP protocol handling
-│   │   └── useStreamingEngine.jsx # Streaming responses
-│   ├── utils/                     # Utility modules
-│   │   ├── apiClient.jsx          # OpenRouter API client
-│   │   ├── mcpClient.jsx          # MCP protocol client
-│   │   ├── httpClient.jsx         # HTTP utilities
-│   │   ├── mathProcessor.jsx      # MathJax integration
-│   │   └── constants.jsx          # App constants
-│   └── lib/
-│       └── utils.js               # Helper functions
-├── docs/                          # Production build output
-├── index.html                     # HTML entry point
-├── vite.config.js                 # Vite configuration
-├── package.json                   # Dependencies and scripts
-└── README.md                      # This file
+src/
+├── main.jsx                    # App entry point (renders ChatApp)
+├── ChatApp.jsx                 # Main chat application component
+├── index.css                   # Global styles and Tailwind imports
+├── components/
+│   ├── ai-elements/            # AI chat UI components
+│   │   ├── conversation.jsx    # Conversation wrapper with auto-scroll
+│   │   ├── message.jsx         # Message display
+│   │   ├── prompt-input.jsx    # Chat input area
+│   │   ├── tool.jsx            # Tool execution display
+│   │   ├── code-block.jsx      # Syntax-highlighted code blocks (Shiki)
+│   │   └── ...                 # loader, reasoning, sources, suggestion, shimmer, model-selector
+│   └── ui/                     # Radix UI wrapper components (19 files)
+├── hooks/
+│   ├── useOpenRouterChat.jsx   # Core chat logic with streaming + tool calling
+│   ├── useModelManager.jsx     # OpenRouter model fetching
+│   └── useMCPManager.jsx       # MCP server connection management
+├── utils/
+│   ├── mcpClient.jsx           # MCP protocol client (dual transport)
+│   ├── httpClient.jsx          # HTTP utilities
+│   ├── mathProcessor.jsx       # KaTeX math preprocessing
+│   ├── exportMarkdown.jsx      # Conversation export
+│   └── systemPrompt.js         # Financial assistant system prompt
+└── lib/
+    └── utils.js                # cn() helper function
+integrations/
+└── BusMgmtBenchmarks/          # Git submodule - financial comparison webapp
+scripts/
+└── sync-busmgmt-assets.mjs     # Copies BusMgmt build output to docs/busmgmt/
 ```
 
-## Usage
+## Built-in Tools
 
-### Basic Usage
+Three tools interact with the BusMgmt iframe:
 
-The `LLMChatInterface` component can be used standalone or integrated into larger applications:
+| Tool | Description |
+|------|-------------|
+| `get_selected_company` | Gets the current company/year dropdown selections |
+| `set_selected_company` | Sets company and/or year selections (company1, year1, company2, year2) |
+| `get_financial_data` | Extracts the financial comparison table data |
 
-```jsx
-import LLMChatInterface from './LLMChatInterface.jsx';
+Tools use a postMessage bridge (`busmgmt.bridge.request` / `busmgmt.bridge.response`) with same-origin DOM fallback.
 
-function App() {
-  return (
-    <LLMChatInterface
-      defaultModel="openai/gpt-4o-mini"
-      height="100vh"
-    />
-  );
-}
-```
+## BusMgmt Integration
 
-### Component Props
+The financial comparison app is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `apiKey` | string | null | OpenRouter API key (uses localStorage if not provided) |
-| `defaultModel` | string | "openai/gpt-4o-mini" | Default model to use |
-| `systemPrompt` | string | "" | System prompt for the conversation |
-| `tools` | array | null | Tool definitions (OpenAI format) |
-| `toolHandlers` | object | null | Tool implementation functions |
-| `enableTools` | boolean | false | Enable tool calling |
-| `toolChoice` | string | "auto" | Tool choice strategy |
-| `parallelToolCalls` | boolean | true | Allow parallel tool execution |
-| `onToolCall` | function | null | Callback for tool execution |
-| `customModels` | array | null | Custom model list (overrides OpenRouter) |
-| `className` | string | "" | Additional CSS classes |
-| `height` | string | "600px" | Component height |
-| `showHeader` | boolean | true | Show header section |
-| `showModelSelector` | boolean | true | Show model selector |
-| `showClearButton` | boolean | true | Show clear messages button |
-| `showDisplayModeToggle` | boolean | true | Show markdown/text toggle |
-| `onMessage` | function | null | Callback for new messages |
-| `onError` | function | null | Callback for errors |
-| `theme` | string | "light" | UI theme |
-| `sidebarPosition` | string | "right" | Sidebar position ("left" or "right") |
+- **Dev iframe**: `http://localhost:3000/company_to_company.html`
+- **Prod iframe**: `./busmgmt/company_to_company.html`
 
-### Tool Calling Example
+### Optional iframe environment overrides
 
-```jsx
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "get_weather",
-      description: "Get current weather for a location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "City name"
-          }
-        },
-        required: ["location"]
-      }
-    }
-  }
-];
-
-const toolHandlers = {
-  get_weather: ({ location }) => {
-    // Your implementation
-    return { temperature: 72, condition: "sunny" };
-  }
-};
-
-<LLMChatInterface
-  tools={tools}
-  toolHandlers={toolHandlers}
-  enableTools={true}
-  onToolCall={(name, args, result, error) => {
-    console.log(`Tool ${name} executed:`, result);
-  }}
-/>
-```
-
-### MCP Server Integration
-
-The interface supports the Model Context Protocol for remote tool servers:
-
-1. **Start an MCP server** (Python example provided in `mcp_server.py`):
-   ```bash
-   python mcp_server.py
-   ```
-
-2. **Configure in the UI**:
-   - Enter MCP server URL in the sidebar
-   - Select transport type (SSE or HTTP)
-   - Click "Connect to MCP"
-   - Available remote tools will be loaded automatically
+- `VITE_IFRAME_SRC`: full override for all modes
+- `VITE_IFRAME_SRC_DEV`: dev default (used when `VITE_IFRAME_SRC` is not set)
+- `VITE_IFRAME_SRC_PROD`: production default (used when `VITE_IFRAME_SRC` is not set)
 
 ## API Configuration
 
 ### OpenRouter API Key
 
-Get your API key from [OpenRouter](https://openrouter.ai/):
-
-1. Sign up at openrouter.ai
+1. Sign up at [openrouter.ai](https://openrouter.ai/)
 2. Generate an API key
-3. Enter it in the sidebar (stored in localStorage)
+3. Enter it in Settings (stored in localStorage)
 
-### Supported Models
+### MCP Server
 
-The interface fetches available models from OpenRouter automatically, including:
-- OpenAI (GPT-4, GPT-3.5)
-- Anthropic (Claude 3.5, Claude 3)
-- Google (Gemini Pro)
-- Meta (Llama models)
-- And many more
-
-## Development
-
-### Tech Stack
-
-- **React 19.2.1** - UI framework
-- **Vite 7** - Build tool and dev server
-- **Tailwind CSS 4.0** - Utility-first CSS
-- **Radix UI** - Accessible component primitives
-- **MathJax 3** - Math typesetting
-- **Markdown-it** - Markdown rendering
-
-### Architecture
-
-The application uses a custom hooks architecture for state management:
-
-- **`useChatEngine`** - Core chat logic, message management, API integration
-- **`useModelManager`** - Model fetching and selection
-- **`useMarkdownRenderer`** - Markdown and math rendering
-- **`useToolManager`** - Local tool execution with error handling
-- **`useMCPManager`** - MCP protocol and remote tool management
-- **`useStreamingEngine`** - Streaming response handling
-
-### Key Features
-
-**Streaming Responses**
-- Server-Sent Events (SSE) for real-time updates
-- Throttled updates to prevent UI overload
-- Automatic fallback to non-streaming mode
-
-**Tool Execution**
-- Parallel and sequential tool calling
-- Error handling and validation
-- Support for both local and remote (MCP) tools
-- Tool execution logging and debugging
-
-**Math Rendering**
-- Inline math with `$...$`
-- Display math with `$$...$$`
-- Automatic MathJax typesetting after render
+Configure an MCP server URL in Settings to add remote database tools. The default connects to the BusMgmt Dolt database server. An example Python MCP server is included (`mcp_server.py`).
 
 ## Deployment
 
 ### GitHub Pages
 
-The project is configured to build to the `/docs` directory for easy GitHub Pages deployment:
+The project builds to `/docs` for GitHub Pages:
 
-1. Build the project:
-   ```bash
-   npm run build
-   ```
+1. `npm run build`
+2. Commit the `/docs` directory
+3. Enable GitHub Pages: branch `main`, folder `/docs`
 
-2. Commit the `/docs` directory:
-   ```bash
-   git add docs/
-   git commit -m "Build for deployment"
-   git push
-   ```
+## Tech Stack
 
-3. Enable GitHub Pages in repository settings:
-   - Source: Deploy from a branch
-   - Branch: main
-   - Folder: /docs
-
-### Other Hosting Platforms
-
-The built files in `/docs` can be deployed to:
-- Netlify
-- Vercel
-- Cloudflare Pages
-- Any static hosting service
-
-## MCP Server (Optional)
-
-A Python MCP server example is included (`mcp_server.py`) with:
-- SSE and HTTP transport support
-- Example calculator tool
-- CORS configuration for browser access
-
-```bash
-# SSE transport (default)
-python mcp_server.py
-
-# HTTP transport
-python mcp_server.py --transport http
-
-# Custom port
-python mcp_server.py --port 5001
-```
-
-## Browser Support
-
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test with `npm run dev`
-5. Build with `npm run build`
-6. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
+- **React 19** - UI framework
+- **Vite 7** - Build tool and dev server
+- **Tailwind CSS 4** - Utility-first CSS
+- **Radix UI** - Accessible component primitives
+- **KaTeX** - Math typesetting (via remark-math + rehype-katex)
+- **Shiki** - Syntax highlighting
+- **markdown-it** + **streamdown** - Markdown rendering
+- **react-resizable-panels** - Split pane layout
+- **Lucide React** - Icons
+- **Motion** - Animations
 
 ## Troubleshooting
 
 ### API Key Issues
 - Ensure your OpenRouter API key is valid
-- Check that it's properly saved in localStorage
+- Check that it's saved in localStorage (`openrouter_api_key`)
 - Try refreshing the page
 
-### Tool Calling Issues
-- Verify tool definitions match OpenAI format
-- Check that tool handlers are properly implemented
-- Enable console logging to debug tool execution
+### Iframe / Tool Issues
+- Make sure the BusMgmt dev server is running (`npm run dev:busmgmt`)
+- Check browser console for bridge timeout errors
+- Verify iframe URL in Settings
 
 ### MCP Connection Issues
-- Verify MCP server is running
-- Check URL and port are correct
-- Ensure CORS is properly configured on the server
-- Try both SSE and HTTP transports
-
-### Math Rendering Issues
-- MathJax loads asynchronously - wait for page load
-- Check browser console for MathJax errors
-- Ensure proper LaTeX syntax in messages
-
-## Acknowledgments
-
-- Built with [React](https://react.dev/)
-- Powered by [OpenRouter](https://openrouter.ai/)
-- UI components from [Radix UI](https://www.radix-ui.com/)
-- Styled with [Tailwind CSS](https://tailwindcss.com/)
-- Math rendering by [MathJax](https://www.mathjax.org/)
+- Verify MCP server is running and URL is correct
+- Transport type is auto-detected (streamable-http or SSE legacy)
+- Check CORS configuration on the server
