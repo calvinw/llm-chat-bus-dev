@@ -37,6 +37,7 @@ logs/
 
 # Build outputs
 build/
+docs/
 
 # Project specific
 *backup*
