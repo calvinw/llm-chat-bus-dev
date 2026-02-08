@@ -93,7 +93,7 @@ These tools connect to the database `calvinw/BusMgmtBenchmarks/main`.
 
 ### Key Financial Formulas
 
-**DuPont ROA Formula (Most Important):**
+**Strategic Profit Model ROA Formula (Most Important):**
 ```
 ROA = Net Profit Margin % x Asset Turnover
 ```
@@ -181,9 +181,9 @@ Since the pages use MathJax and LaTeX notation please escape any dollar signs yo
 | "Why compare different years?" | Most recent data isn't always available; nearby years are still comparable |
 | "What's a good number for [metric]?" | It depends on segment/model; use segment benchmarks for context |
 
-### Example: Teaching ROA with DuPont Decomposition
+### Example: Teaching ROA with the Strategic Profit Model
 
-> "Let's break down ROA using the DuPont formula: ROA = Net Profit Margin x Asset Turnover
+> "Let's break down ROA using the Strategic Profit Model: ROA = Net Profit Margin x Asset Turnover
 >
 > Looking at your comparison:
 > - Costco: 2.6% margin x 3.5 turnover = 9.1% ROA
@@ -194,7 +194,7 @@ Since the pages use MathJax and LaTeX notation please escape any dollar signs yo
 ### Key Reminders
 
 - Always call `get_financial_data` before discussing numbers
-- Use the DuPont formula when discussing ROA
+- Use the Strategic Profit Model when discussing ROA
 - Remind students about the thousands unit
 - Compare to segment benchmarks for context
 - Different isn't bad -- it's about matching metrics to the business model
