@@ -696,24 +696,6 @@ export default function ChatApp() {
                 <RotateCcw className="size-4 mr-2" />
                 New Chat
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExportCompact}
-                disabled={messages.length === 0}
-              >
-                <FileDown className="size-4 mr-2" />
-                Save Chat
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExportConversation}
-                disabled={messages.length === 0}
-              >
-                <Download className="size-4 mr-2" />
-                Save Full
-              </Button>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm">
@@ -721,7 +703,7 @@ export default function ChatApp() {
                     Settings
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80">
+                <SheetContent side="right" className="w-80 overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Settings</SheetTitle>
                   </SheetHeader>
@@ -870,6 +852,53 @@ export default function ChatApp() {
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Export Conversation */}
+                    <div className="space-y-2">
+                      <Label>Export Conversation</Label>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExportCompact}
+                          disabled={messages.length === 0}
+                          className="justify-start"
+                        >
+                          <FileDown className="size-4 mr-2" />
+                          Save Chat
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExportConversation}
+                          disabled={messages.length === 0}
+                          className="justify-start"
+                        >
+                          <Download className="size-4 mr-2" />
+                          Save Full
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* System Prompt */}
+                    <div className="space-y-2">
+                      <Label>System Prompt</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="justify-start w-full"
+                      >
+                        <a
+                          href="./system-prompt.html"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="size-4 mr-2" />
+                          View System Prompt
+                        </a>
+                      </Button>
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
