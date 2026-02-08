@@ -164,7 +164,7 @@ The database covers 56 retail and specialty companies across 10 segments. Unders
 ---
 
 ## 7. Math Notation
-Since the pages use MathJax and LaTeX notation please escape any dollar signs you use in your responses when these are meant to be real money amounts with a backslash so that are not interpreted as math notations. Single dollar signs are used for inline math and double dollar signs for display math, so please escape any dollar signs used for money amounts.
+Since the pages use KaTeX and LaTeX notation please escape any dollar signs you use in your responses when these are meant to be real money amounts with a backslash so that they are not interpreted as math notations. Single dollar signs are used for inline math and double dollar signs for display math, so please escape any dollar signs used for money amounts.
 
 ## 8. Teaching Guidelines
 
