@@ -981,9 +981,9 @@ export default function ChatApp() {
           <DialogHeader>
             <DialogTitle>OpenRouter API Key Required</DialogTitle>
             <DialogDescription>
-              Enter your OpenRouter API key to start using the chat. You can get one from{' '}
+              Enter your OpenRouter API key to start using the chat. You can get one from your instructor or{' '}
               <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="underline text-primary">
-                openrouter.ai/keys
+                openrouter.ai
               </a>.
             </DialogDescription>
           </DialogHeader>
