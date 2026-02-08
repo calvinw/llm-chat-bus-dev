@@ -14,6 +14,47 @@ A modern, feature-rich React chat interface for Large Language Models using the 
 - **Radix UI Components** - Accessible, customizable UI components
 - **Tailwind CSS v4** - Modern utility-first styling
 
+## BusMgmt Integration
+
+- The real app is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
+- Local wrapper default iframe target: `http://localhost:3000/company_to_company.html`.
+- Production wrapper default iframe target: `./busmgmt/company_to_company.html`.
+- Wrapper tools use `postMessage` bridge first (`busmgmt.bridge.request` / `busmgmt.bridge.response`) with same-origin DOM fallback during transition.
+
+### Integration Setup
+
+```bash
+git submodule update --init --recursive
+npm install
+npm run setup:integration
+```
+
+### Local Dev (Dual Server)
+
+```bash
+# Terminal A: wrapper
+npm run dev
+
+# Terminal B: BusMgmt app
+npm run dev:busmgmt
+```
+
+### Integration Build / Preview
+
+```bash
+# Build wrapper + BusMgmt, then sync BusMgmt assets into docs/busmgmt
+npm run build
+
+# Preview integration build on localhost:4173
+npm run preview:integration
+```
+
+### Optional iframe environment overrides
+
+- `VITE_IFRAME_SRC`: full override for all modes
+- `VITE_IFRAME_SRC_DEV`: dev default (used when `VITE_IFRAME_SRC` is not set)
+- `VITE_IFRAME_SRC_PROD`: production default (used when `VITE_IFRAME_SRC` is not set)
+
 ## Quick Start
 
 ### Prerequisites

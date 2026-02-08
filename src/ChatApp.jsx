@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -48,6 +48,44 @@ import {
   Group,
   Separator,
 } from 'react-resizable-panels';
+
+const BRIDGE_REQUEST_TYPE = 'busmgmt.bridge.request';
+const BRIDGE_RESPONSE_TYPE = 'busmgmt.bridge.response';
+const DEFAULT_DEV_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_DEV || 'http://localhost:3000/company_to_company.html';
+const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/company_to_company.html';
+const DEFAULT_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC || (import.meta.env.DEV ? DEFAULT_DEV_IFRAME_SRC : DEFAULT_PROD_IFRAME_SRC);
+
+function normalizePathname(pathname) {
+  if (!pathname) return '/';
+  return pathname.endsWith('/') ? pathname.slice(0, -1) || '/' : pathname;
+}
+
+function resolveIframeSource(candidate) {
+  const raw = (candidate ?? '').trim();
+  if (!raw) {
+    return { src: '', warning: '' };
+  }
+
+  try {
+    const current = new URL(window.location.href);
+    const target = new URL(raw, current.href);
+    const currentPath = normalizePathname(current.pathname);
+    const targetPath = normalizePathname(target.pathname);
+    const sameOrigin = current.origin === target.origin;
+    const isRecursive = sameOrigin && currentPath === targetPath;
+
+    if (isRecursive) {
+      return {
+        src: DEFAULT_IFRAME_SRC,
+        warning: `Detected recursive iframe URL and reset it to ${DEFAULT_IFRAME_SRC}.`
+      };
+    }
+
+    return { src: raw, warning: '' };
+  } catch {
+    return { src: raw, warning: 'Iframe URL could not be parsed. Please verify the value.' };
+  }
+}
 
 /**
  * Example tool definition for adding two numbers (commented out)
@@ -163,15 +201,96 @@ const getFinancialDataTool = {
 
 
 export default function ChatApp() {
+  const initialIframeConfig = resolveIframeSource(
+    localStorage.getItem('chatapp_iframe_src') || DEFAULT_IFRAME_SRC
+  );
+
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
+  const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
 
   // Iframe panel state
-  const [iframeSrc, setIframeSrc] = useState(() => {
-    return localStorage.getItem('chatapp_iframe_src') || './company-to-company.html';
-  });
+  const [iframeSrc, setIframeSrc] = useState(initialIframeConfig.src);
   const iframeRef = useRef(null);
+
+  const applyIframeSource = useCallback((candidate) => {
+    const { src, warning } = resolveIframeSource(candidate);
+    setIframeSrc(src);
+    setIframeConfigWarning(warning);
+    if (src) {
+      localStorage.setItem('chatapp_iframe_src', src);
+    } else {
+      localStorage.removeItem('chatapp_iframe_src');
+    }
+  }, []);
+
+  const shouldRenderIframe = Boolean(iframeSrc);
+
+  const getIframeTargetOrigin = useCallback(() => {
+    try {
+      const frameUrl = new URL(iframeSrc, window.location.href);
+      return frameUrl.origin;
+    } catch (error) {
+      console.warn('Failed to parse iframe URL, falling back to current origin', error);
+      return window.location.origin;
+    }
+  }, [iframeSrc]);
+
+  const requestIframeBridge = useCallback((action, payload = {}, timeoutMs = 6000) => {
+    return new Promise((resolve, reject) => {
+      const iframeWindow = iframeRef.current?.contentWindow;
+      if (!iframeWindow || !iframeSrc) {
+        reject(new Error('Iframe not loaded'));
+        return;
+      }
+
+      const requestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `bridge-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const targetOrigin = getIframeTargetOrigin();
+
+      let timeoutId;
+      const onMessage = (event) => {
+        if (event.origin !== targetOrigin || event.source !== iframeWindow) {
+          return;
+        }
+        const message = event.data;
+        if (
+          !message ||
+          message.type !== BRIDGE_RESPONSE_TYPE ||
+          message.requestId !== requestId ||
+          message.action !== action
+        ) {
+          return;
+        }
+
+        window.removeEventListener('message', onMessage);
+        clearTimeout(timeoutId);
+        if (!message.success) {
+          reject(new Error(message.error || `Bridge action failed: ${action}`));
+          return;
+        }
+        resolve(message.result);
+      };
+
+      window.addEventListener('message', onMessage);
+      timeoutId = window.setTimeout(() => {
+        window.removeEventListener('message', onMessage);
+        reject(new Error(`Bridge timeout for action: ${action}`));
+      }, timeoutMs);
+
+      iframeWindow.postMessage(
+        {
+          type: BRIDGE_REQUEST_TYPE,
+          requestId,
+          action,
+          payload
+        },
+        targetOrigin
+      );
+    });
+  }, [getIframeTargetOrigin, iframeSrc]);
 
   // Iframe bridge - provides access to the iframe DOM
   const getIframeState = useCallback(() => {
@@ -268,7 +387,20 @@ export default function ChatApp() {
     //     result: result
     //   };
     // },
-    get_selected_company: () => {
+    get_selected_company: async () => {
+      try {
+        const state = await requestIframeBridge('get_selection');
+        return {
+          summary: `Comparing ${state.company1} (${state.year1}) vs ${state.company2} (${state.year2})`,
+          company1: state.company1 || 'Not selected',
+          year1: state.year1 || 'Not selected',
+          company2: state.company2 || 'Not selected',
+          year2: state.year2 || 'Not selected'
+        };
+      } catch (bridgeError) {
+        console.warn('Bridge get_selection failed, attempting DOM fallback', bridgeError);
+      }
+
       const state = getIframeState();
       if (!state) {
         return { error: 'Iframe not loaded or not accessible' };
@@ -293,7 +425,7 @@ export default function ChatApp() {
         title: state.title
       };
     },
-    set_selected_company: ({ company, year, company1, year1, company2, year2 }) => {
+    set_selected_company: async ({ company, year, company1, year1, company2, year2 }) => {
       // Build config object supporting both old and new format
       const config = {};
       if (company1) config.company1 = company1;
@@ -303,6 +435,23 @@ export default function ChatApp() {
       // Legacy support
       if (company) config.company = company;
       if (year) config.year = year;
+
+      try {
+        const bridgePayload = {
+          company1: config.company1 ?? config.company,
+          year1: config.year1 ?? config.year,
+          company2: config.company2,
+          year2: config.year2,
+        };
+        const bridgeResult = await requestIframeBridge('set_selection', bridgePayload);
+        return {
+          success: true,
+          summary: 'Updated iframe selection via bridge',
+          ...bridgeResult
+        };
+      } catch (bridgeError) {
+        console.warn('Bridge set_selection failed, attempting DOM fallback', bridgeError);
+      }
 
       const success = setIframeState(config);
       if (!success) {
@@ -327,7 +476,16 @@ export default function ChatApp() {
         year: year || 'unchanged'
       };
     },
-    get_financial_data: () => {
+    get_financial_data: async () => {
+      try {
+        const data = await requestIframeBridge('get_financial_data');
+        return {
+          summary: `Financial data for ${data.company1} vs ${data.company2}`,
+          ...data
+        };
+      } catch (bridgeError) {
+        console.warn('Bridge get_financial_data failed, attempting DOM fallback', bridgeError);
+      }
       if (!iframeRef.current || !iframeSrc) {
         return { error: 'Iframe not loaded or not accessible' };
       }
@@ -337,27 +495,20 @@ export default function ChatApp() {
         if (!doc) {
           return { error: 'Cannot access iframe document' };
         }
-
-        // Get the company info from headers
         const header1 = doc.getElementById('header1');
         const header2 = doc.getElementById('header2');
         const company1Header = header1?.textContent || 'Company 1';
         const company2Header = header2?.textContent || 'Company 2';
-
-        // Get table body with all the financial data
         const tableBody = doc.getElementById('table-body');
         if (!tableBody) {
           return { error: 'Financial data table not found' };
         }
-
-        // Parse the table rows
         const rows = tableBody.querySelectorAll('tr');
         const financialNumbers = {};
         const financialIndicators = {};
         let currentSection = null;
 
         rows.forEach(row => {
-          // Check if this is a section header
           if (row.classList.contains('section-header')) {
             const sectionText = row.textContent.trim();
             if (sectionText.includes('Financial Numbers')) {
@@ -367,8 +518,6 @@ export default function ChatApp() {
             }
             return;
           }
-
-          // Parse metric rows
           if (row.classList.contains('metric-row')) {
             const cells = row.querySelectorAll('td');
             if (cells.length === 3) {
@@ -389,8 +538,6 @@ export default function ChatApp() {
             }
           }
         });
-
-        // Check if we got any data
         if (Object.keys(financialNumbers).length === 0 && Object.keys(financialIndicators).length === 0) {
           return {
             error: 'No financial data available. Please select companies to compare.',
@@ -495,7 +642,7 @@ export default function ChatApp() {
   const apiKeyStatusClassName = apiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
   const mcpStatusLabel = mcpConnectionStatus ?? 'not connected';
   const mcpBadgeClassName = mcpConnectionStatus ? mcpStatusClassName : 'border-red-600 text-red-600';
-  const iframeStatusClassName = iframeSrc ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+  const iframeStatusClassName = shouldRenderIframe ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
 
   // Render tool parts if present
   const renderToolPart = (part) => {
@@ -514,8 +661,8 @@ export default function ChatApp() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Group orientation="horizontal" style={{ width: '100%', height: '100%' }}>
         {/* Iframe Panel */}
-        <Panel defaultSize={iframeSrc ? 50 : 0} minSize={iframeSrc ? 20 : 0}>
-          {iframeSrc && (
+        <Panel defaultSize={shouldRenderIframe ? 50 : 0} minSize={shouldRenderIframe ? 20 : 0}>
+          {shouldRenderIframe && (
             <div style={{ height: '100%' }}>
               <iframe
                 ref={iframeRef}
@@ -531,7 +678,7 @@ export default function ChatApp() {
         <Separator className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
 
         {/* Main Chat Panel */}
-        <Panel defaultSize={iframeSrc ? 50 : 100} minSize={20}>
+        <Panel defaultSize={shouldRenderIframe ? 50 : 100} minSize={20}>
         <div style={{ height: '100%' }} className="flex flex-col">
           {/* Header */}
           <header className="flex items-center justify-between border-b px-6 py-4">
@@ -673,16 +820,19 @@ export default function ChatApp() {
                         type="text"
                         value={iframeSrc}
                         onChange={(e) => {
-                          const newSrc = e.target.value;
-                          setIframeSrc(newSrc);
-                          localStorage.setItem('chatapp_iframe_src', newSrc);
+                          applyIframeSource(e.target.value);
                         }}
-                        placeholder="./BusMgmtBenchmarks/company_to_company.html"
+                        placeholder={DEFAULT_IFRAME_SRC}
                       />
                       <CardDescription className="text-xs">
-                        URL to load in the left side panel. Must be same-origin for DOM access.
+                        URL to load in the left side panel. Bridge messaging works across origins; direct DOM fallback requires same-origin.
                         Leave empty to hide the panel.
                       </CardDescription>
+                      {iframeConfigWarning && (
+                        <CardDescription className="text-xs text-red-600">
+                          {iframeConfigWarning}
+                        </CardDescription>
+                      )}
                     </div>
 
                     {/* Info Box */}
@@ -710,7 +860,7 @@ export default function ChatApp() {
                         <div className="flex items-center justify-between gap-3">
                           <span>Iframe App</span>
                           <Badge variant="outline" className={iframeStatusClassName}>
-                            {iframeSrc ? 'Enabled' : 'Hidden'}
+                            {shouldRenderIframe ? 'Enabled' : 'Hidden'}
                           </Badge>
                         </div>
                         {mcpConnectionStatus === 'connected' && (

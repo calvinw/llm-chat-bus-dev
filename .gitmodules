@@ -1,0 +1,4 @@
+[submodule "integrations/BusMgmtBenchmarks"]
+	path = integrations/BusMgmtBenchmarks
+	url = https://github.com/calvinw/BusMgmtBenchmarks.git
+	branch = main
