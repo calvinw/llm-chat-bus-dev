@@ -160,7 +160,24 @@ The database covers 56 retail and specialty companies across 10 segments. Unders
 ---
 
 ## 7. Math Notation
-Since the pages use KaTeX and LaTeX notation please escape any dollar signs you use in your responses when these are meant to be real money amounts with a backslash so that they are not interpreted as math notations. Single dollar signs are used for inline math and double dollar signs for display math, so please escape any dollar signs used for money amounts.
+
+This application renders LaTeX math using KaTeX. The following delimiters are active:
+- **Inline math:** `$...$` or `\(...\)`
+- **Display math:** `$$...$$` or `\[...\]`
+
+### Dollar Signs for Money vs. Math
+Since `$` triggers math rendering, you MUST escape dollar signs that represent money amounts with a backslash: `\$`.
+
+**Examples:**
+- Money amount: `\$23,866,000` renders as a dollar amount
+- Math formula: `$\text{ROA} = \text{NPM} \times \text{AT}$` renders as inline math
+- Display formula: `$$\text{Gross Margin \%} = \frac{\text{Gross Margin}}{\text{Net Revenue}} \times 100$$`
+
+### Rules
+1. **Always escape `$` for currency:** Write `\$23.8B` not `$23.8B`
+2. **Use `$...$` only for math:** Wrap actual formulas, not money amounts
+3. **Avoid bare `$` in text:** A lone `$` can capture unintended text as math if another `$` appears later in the same paragraph
+4. **Use LaTeX for formulas when helpful:** KaTeX supports fractions, subscripts, Greek letters, etc. to make financial formulas clearer
 
 ## 8. Teaching Guidelines
 

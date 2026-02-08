@@ -19,6 +19,7 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -208,6 +209,8 @@ export default function ChatApp() {
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(() => !localStorage.getItem('openrouter_api_key'));
+  const [apiKeyInput, setApiKeyInput] = useState('');
   const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
 
   // Iframe panel state
@@ -588,7 +591,7 @@ export default function ChatApp() {
   const { models, loading: modelsLoading } = useModelManager(apiKey);
 
   const [selectedModel, setSelectedModel] = useState(() => {
-    return localStorage.getItem('openrouter_model') || 'openai/gpt-4o-mini';
+    return localStorage.getItem('openrouter_model') || 'google/gemini-3-flash-preview';
   });
 
   // Save API key to localStorage
@@ -971,6 +974,50 @@ export default function ChatApp() {
         </div>
       </Panel>
       </Group>
+
+      {/* API Key Dialog - shown on startup if no key is set */}
+      <Dialog open={apiKeyDialogOpen} onOpenChange={setApiKeyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>OpenRouter API Key Required</DialogTitle>
+            <DialogDescription>
+              Enter your OpenRouter API key to start using the chat. You can get one from{' '}
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                openrouter.ai/keys
+              </a>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="api-key-dialog">API Key</Label>
+            <Input
+              id="api-key-dialog"
+              type="password"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              placeholder=""
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && apiKeyInput.trim()) {
+                  handleSaveApiKey(apiKeyInput.trim());
+                  setApiKeyDialogOpen(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                if (apiKeyInput.trim()) {
+                  handleSaveApiKey(apiKeyInput.trim());
+                  setApiKeyDialogOpen(false);
+                }
+              }}
+              disabled={!apiKeyInput.trim()}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

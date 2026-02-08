@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
+import fs from 'fs';
+
+const systemPrompt = fs.readFileSync('llm_prompt.md', 'utf-8');
 
 export default defineConfig({
   plugins: [
@@ -17,6 +20,9 @@ export default defineConfig({
       ]
     })
   ],
+  define: {
+    __SYSTEM_PROMPT__: JSON.stringify(systemPrompt),
+  },
   resolve: {
     alias: {
       "@": path.resolve(process.cwd(), "./src"),

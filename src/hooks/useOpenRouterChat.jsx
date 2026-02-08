@@ -81,7 +81,7 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
    * Supports unlimited tool call chaining
    */
   const sendMessage = useCallback(async (content, options = {}) => {
-    const { model = 'openai/gpt-4o-mini', systemPrompt } = options;
+    const { model = 'google/gemini-3-flash-preview', systemPrompt } = options;
 
     const apiKey = localStorage.getItem('openrouter_api_key');
     if (!apiKey) {

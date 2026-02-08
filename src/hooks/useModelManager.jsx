@@ -48,7 +48,7 @@ export function useModelManager(apiKey) {
           setLoading(false);
           // Fallback to default models if API call fails
           setModels([
-            { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+            { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash' },
             { id: 'openai/gpt-4o', name: 'GPT-4o' },
             { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
           ]);
@@ -63,7 +63,7 @@ export function useModelManager(apiKey) {
       setLoading(false);
       // Use fallback models when no API key
       setModels([
-        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+        { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash' },
         { id: 'openai/gpt-4o', name: 'GPT-4o' },
         { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
       ]);
