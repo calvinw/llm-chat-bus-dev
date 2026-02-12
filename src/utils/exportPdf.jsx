@@ -12,6 +12,17 @@ function captureIframeContent(iframeEl) {
     const doc = iframeEl.contentWindow?.document;
     if (!doc || !doc.body) return null;
 
+    // Sync live form state into DOM attributes so innerHTML captures current values
+    for (const sel of doc.querySelectorAll('select')) {
+      for (const opt of sel.options) {
+        if (opt.selected) opt.setAttribute('selected', 'selected');
+        else opt.removeAttribute('selected');
+      }
+    }
+    for (const inp of doc.querySelectorAll('input')) {
+      inp.setAttribute('value', inp.value);
+    }
+
     const html = doc.body.innerHTML;
 
     // Collect stylesheet text
