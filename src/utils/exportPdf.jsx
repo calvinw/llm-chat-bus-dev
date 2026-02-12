@@ -162,8 +162,9 @@ function composePrintDocument(iframeHtml, iframeStyles, conversationHtml) {
  * Main entry point: capture iframe + render chat, open print window.
  */
 export function printConversationWithTable(iframeEl, messages) {
-  // Generate markdown from the conversation
-  const md = exportConversationAsMarkdown(messages, { compact: true });
+  // Generate markdown from the conversation, stripping tool call lines
+  const md = exportConversationAsMarkdown(messages, { compact: true })
+    .replace(/^\*\[tool:.*\]\*\n*/gm, '');
   const conversationHtml = renderMarkdownToHtml(md);
 
   // Try to capture iframe content

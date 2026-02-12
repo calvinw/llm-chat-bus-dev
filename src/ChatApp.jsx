@@ -705,6 +705,15 @@ export default function ChatApp() {
                 <RotateCcw className="size-4 mr-2" />
                 New Chat
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSavePdf}
+                disabled={messages.length === 0}
+              >
+                <Printer className="size-4 mr-2" />
+                Save PDF
+              </Button>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm">
@@ -885,16 +894,6 @@ export default function ChatApp() {
                         >
                           <Download className="size-4 mr-2" />
                           Save Full
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleSavePdf}
-                          disabled={messages.length === 0}
-                          className="justify-start"
-                        >
-                          <Printer className="size-4 mr-2" />
-                          Save PDF
                         </Button>
                       </div>
                     </div>
