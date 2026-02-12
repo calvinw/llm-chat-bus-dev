@@ -38,12 +38,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
 import { SYSTEM_PROMPT } from '@/utils/systemPrompt';
 import { exportConversationAsMarkdown, downloadMarkdown } from '@/utils/exportMarkdown';
+import { printConversationWithTable } from '@/utils/exportPdf';
 import {
   Panel,
   Group,
@@ -636,6 +637,11 @@ export default function ChatApp() {
     downloadMarkdown(md, `conversation-compact-${timestamp}.md`);
   };
 
+  // Save as PDF via browser print dialog
+  const handleSavePdf = () => {
+    printConversationWithTable(iframeRef.current, messages);
+  };
+
   const selectedModelName = selectedModel;
   const mcpStatusClassName = mcpConnectionStatus === 'connected'
     ? 'border-green-600 text-green-600'
@@ -879,6 +885,16 @@ export default function ChatApp() {
                         >
                           <Download className="size-4 mr-2" />
                           Save Full
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSavePdf}
+                          disabled={messages.length === 0}
+                          className="justify-start"
+                        >
+                          <Printer className="size-4 mr-2" />
+                          Save PDF
                         </Button>
                       </div>
                     </div>
