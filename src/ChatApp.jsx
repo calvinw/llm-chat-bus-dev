@@ -53,8 +53,8 @@ import {
 
 const BRIDGE_REQUEST_TYPE = 'busmgmt.bridge.request';
 const BRIDGE_RESPONSE_TYPE = 'busmgmt.bridge.response';
-const DEFAULT_DEV_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_DEV || 'http://localhost:3000/company_to_company.html';
-const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/company_to_company.html';
+const DEFAULT_DEV_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_DEV || 'http://localhost:3000/company_to_company.html?iframe=true';
+const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/company_to_company.html?iframe=true';
 const DEFAULT_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC || (import.meta.env.DEV ? DEFAULT_DEV_IFRAME_SRC : DEFAULT_PROD_IFRAME_SRC);
 
 function normalizePathname(pathname) {

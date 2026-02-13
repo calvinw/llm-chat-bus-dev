@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:busmgmt": "npm --prefix integrations/BusMgmtBenchmarks run dev",
+    "dev:all": "npm --prefix integrations/BusMgmtBenchmarks run dev -- --no-open & until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo 'BusMgmt ready on :3000' && npm run dev -- --open",
     "setup:integration": "git submodule update --init --recursive && npm --prefix integrations/BusMgmtBenchmarks install",
     "build:wrapper": "vite build",
     "build:busmgmt": "npm --prefix integrations/BusMgmtBenchmarks run build",
