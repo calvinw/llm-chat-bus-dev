@@ -179,6 +179,29 @@ scripts/
 ### Deployment
 Production deployment is handled automatically by **GitHub Actions** (`.github/workflows/deploy.yml`). On every push to `main`, the workflow checks out the repo with submodules, runs `npm run build`, and deploys to GitHub Pages. The `docs/` directory is gitignored — no build artifacts are committed to the repo.
 
+### Git Submodule Workflow (BusMgmtBenchmarks)
+
+The `integrations/BusMgmtBenchmarks/` directory is a **git submodule** pointing to `https://github.com/calvinw/BusMgmtBenchmarks.git`. It has its own repo, branches, and deployment. Changes that touch both repos require a specific workflow:
+
+**Development & Testing:**
+1. Run both dev servers: `npm run dev` (port 8081) + `npm run dev:busmgmt` (port 3000)
+2. Test the submodule standalone: `http://localhost:3000/company_to_company.html`
+3. Test inside the chat iframe: `http://localhost:8081`
+4. For production build testing of the submodule: `cd integrations/BusMgmtBenchmarks && npm run build && npx serve docs -l 4000`
+
+**Committing & Pushing (order matters):**
+1. **Submodule first** — `cd integrations/BusMgmtBenchmarks`, commit and push changes there
+2. **Parent repo second** — back in the root, the submodule shows as `modified (new commits)`; commit the submodule pointer update along with any parent repo changes, then push
+
+**Important notes:**
+- The submodule may have a **detached HEAD** if checked out by the parent repo. Before committing, check out a branch: `cd integrations/BusMgmtBenchmarks && git checkout main`
+- The submodule's `docs/` directory is **gitignored** (deployed via GitHub Actions). Don't commit build artifacts there.
+- The submodule's `package-lock.json` **is** tracked and should be committed when it changes.
+- The parent repo's `integrations/BusMgmtBenchmarks` entry tracks a specific commit hash. Pushing the parent updates which submodule commit is used.
+
+**Iframe mode (`?iframe=true`):**
+The BusMgmt app detects `?iframe=true` in the URL to collapse the navigation sidebar into hamburger/overlay mode at all screen sizes. The chat wrapper appends this parameter automatically via `DEFAULT_DEV_IFRAME_SRC` and `DEFAULT_PROD_IFRAME_SRC` in `ChatApp.jsx`. Without the parameter, the standalone app behaves normally.
+
 ### Development Notes
 - All files use `.jsx` extension for React components
 - No external state management library — uses React's built-in hooks
