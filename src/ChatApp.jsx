@@ -670,27 +670,30 @@ export default function ChatApp() {
 
   // Rotating thinking messages
   const thinkingMessages = [
-    'Crunching the numbers…',
-    'Consulting the accountant…',
-    'Comparing balance sheets…',
-    'Checking the ratios…',
-    'Analyzing the margins…',
-    'Reading the annual report…',
-    'Auditing the books…',
-    'Calculating ROA…',
-    'Reviewing the income statement…',
-    'Balancing the ledger…',
-    'Checking the bottom line…',
-    'Forecasting revenue…',
+    'Checking the final exam…',
+    'Visiting Chegg…',
+    'Asking students from last semester…',
+    'Wait, we have a textbook?…',
+    'Reviewing my Rate My Professor comments…',
+    'Pretending to understand the balance sheet…',
+    'Cramming before the midterm…',
+    "Looking up 'accounting' on Wikipedia…",
+    'Asking ChatGPT… wait…',
+    'Hoping the curve saves us…',
+    'Checking if the library is open…',
+    'Raising my hand… never!',
+    'Emailing the professor at 2 AM…',
+    'Praying to the Excel gods…',
+    "Copying the smart kid's spreadsheet…",
+    'Watching a YouTube tutorial…',
   ];
 
   const toolMessages = [
-    'Pulling up the financials…',
-    'Looking up the 10-K…',
-    'Querying the database…',
-    'Grabbing the earnings report…',
-    'Checking the filings…',
-    'Opening the spreadsheet…',
+    'Hacking into the mainframe…',
+    "Borrowing someone's Bloomberg terminal…",
+    'Sneaking into the computer lab…',
+    "Stealing the professor's answer key…",
+    'Opening Excel for the first time…',
   ];
 
   const [thinkingIndex, setThinkingIndex] = useState(() => Math.floor(Math.random() * 100));
@@ -1069,8 +1072,8 @@ export default function ChatApp() {
                 {isLoading && !(messages.length > 0 && messages[messages.length - 1].role === 'assistant' && messages[messages.length - 1].content) && (
                   <Message from="assistant">
                     <MessageContent>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader size={14} />
+                      <div className="flex items-center gap-2 text-base text-muted-foreground">
+                        <Loader size={18} />
                         <span>{currentThinkingMessage}</span>
                       </div>
                     </MessageContent>
