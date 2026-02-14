@@ -671,26 +671,26 @@ export default function ChatApp() {
   // Rotating thinking messages
   const thinkingMessages = [
     'Crunching the numbers…',
-    'Reading the spreadsheet…',
-    'Consulting the finance gods…',
+    'Consulting the accountant…',
     'Comparing balance sheets…',
-    'Doing some quick math…',
     'Checking the ratios…',
-    'Almost there…',
-    'Analyzing the data…',
-    'Looking at the fine print…',
-    'Carrying the one…',
-    'Sharpening the pencils…',
-    'Warming up the calculator…',
+    'Analyzing the margins…',
+    'Reading the annual report…',
+    'Auditing the books…',
+    'Calculating ROA…',
+    'Reviewing the income statement…',
+    'Balancing the ledger…',
+    'Checking the bottom line…',
+    'Forecasting revenue…',
   ];
 
   const toolMessages = [
-    'Fetching the data…',
-    'Peeking at the iframe…',
-    'Querying the database…',
-    'Grabbing the numbers…',
     'Pulling up the financials…',
-    'Rummaging through the data…',
+    'Looking up the 10-K…',
+    'Querying the database…',
+    'Grabbing the earnings report…',
+    'Checking the filings…',
+    'Opening the spreadsheet…',
   ];
 
   const [thinkingIndex, setThinkingIndex] = useState(() => Math.floor(Math.random() * 100));
