@@ -301,6 +301,14 @@ export const MessageResponse = memo(({
   const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], []);
   const rehypePlugins = useMemo(() => [rehypeKatex], []);
 
+  // Convert \[...\] → $$...$$ and \(...\) → $...$ so remark-math can parse them
+  const processedChildren = useMemo(() => {
+    if (typeof children !== 'string') return children;
+    return children
+      .replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => `$$${math}$$`)
+      .replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => `$${math}$`);
+  }, [children]);
+
   return (
     <StreamdownErrorBoundary fallbackContent={children}>
       <Streamdown
@@ -309,7 +317,7 @@ export const MessageResponse = memo(({
         remarkPlugins={remarkPlugins}
         rehypePlugins={rehypePlugins}
         {...props}>
-        {children}
+        {processedChildren}
       </Streamdown>
     </StreamdownErrorBoundary>
   );
