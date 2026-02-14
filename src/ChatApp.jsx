@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -18,6 +18,7 @@ import {
   PromptInputSubmit,
 } from '@/components/ai-elements/prompt-input';
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
+import { Loader } from '@/components/ai-elements/loader';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
@@ -213,6 +214,7 @@ export default function ChatApp() {
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(() => !localStorage.getItem('openrouter_api_key'));
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
+  const [toolDisplayMode, setToolDisplayMode] = useState(() => localStorage.getItem('chatapp_tool_display') || 'none');
 
   // Iframe panel state
   const [iframeSrc, setIframeSrc] = useState(initialIframeConfig.src);
@@ -653,7 +655,7 @@ export default function ChatApp() {
   const mcpBadgeClassName = mcpConnectionStatus ? mcpStatusClassName : 'border-red-600 text-red-600';
   const iframeStatusClassName = shouldRenderIframe ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
 
-  // Render tool parts if present
+  // Render tool parts with full details
   const renderToolPart = (part) => {
     return (
       <Tool key={part.toolCallId} defaultOpen={part.state === 'output-error'} className="my-1">
@@ -665,6 +667,47 @@ export default function ChatApp() {
       </Tool>
     );
   };
+
+  // Rotating thinking messages
+  const thinkingMessages = [
+    'Crunching the numbers…',
+    'Reading the spreadsheet…',
+    'Consulting the finance gods…',
+    'Comparing balance sheets…',
+    'Doing some quick math…',
+    'Checking the ratios…',
+    'Almost there…',
+    'Analyzing the data…',
+    'Looking at the fine print…',
+    'Carrying the one…',
+    'Sharpening the pencils…',
+    'Warming up the calculator…',
+  ];
+
+  const toolMessages = [
+    'Fetching the data…',
+    'Peeking at the iframe…',
+    'Querying the database…',
+    'Grabbing the numbers…',
+    'Pulling up the financials…',
+    'Rummaging through the data…',
+  ];
+
+  const [thinkingIndex, setThinkingIndex] = useState(() => Math.floor(Math.random() * 100));
+  useEffect(() => {
+    if (!isLoading) {
+      setThinkingIndex(Math.floor(Math.random() * 100));
+      return;
+    }
+    const interval = setInterval(() => {
+      setThinkingIndex(i => i + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const currentThinkingMessage = status === 'executing_tools'
+    ? toolMessages[thinkingIndex % toolMessages.length]
+    : thinkingMessages[thinkingIndex % thinkingMessages.length];
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
@@ -835,6 +878,30 @@ export default function ChatApp() {
                       )}
                     </div>
 
+                    {/* Tool Display Mode */}
+                    <div className="space-y-2">
+                      <Label htmlFor="tool-display">Tool Display</Label>
+                      <Select
+                        value={toolDisplayMode}
+                        onValueChange={(value) => {
+                          setToolDisplayMode(value);
+                          localStorage.setItem('chatapp_tool_display', value);
+                        }}
+                      >
+                        <SelectTrigger id="tool-display">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="details">Show Tools with Details</SelectItem>
+                          <SelectItem value="brief">Show Brief Tools</SelectItem>
+                          <SelectItem value="none">Show No Tools</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <CardDescription className="text-xs">
+                        Controls how tool calls appear in the conversation. Tools always run regardless of this setting.
+                      </CardDescription>
+                    </div>
+
                     {/* Info Box */}
                     <Card>
                       <CardHeader className="pb-3">
@@ -883,7 +950,7 @@ export default function ChatApp() {
                           className="justify-start"
                         >
                           <FileDown className="size-4 mr-2" />
-                          Save Chat
+                          Save Chat as Markdown
                         </Button>
                         <Button
                           variant="outline"
@@ -893,7 +960,7 @@ export default function ChatApp() {
                           className="justify-start"
                         >
                           <Download className="size-4 mr-2" />
-                          Save Full
+                          Save Chat with Tool Details
                         </Button>
                       </div>
                     </div>
@@ -950,20 +1017,64 @@ export default function ChatApp() {
                     </div>
                   </div>
                 ) : (
-                  messages.map((message, index) => (
-                    <Message key={index} from={message.role}>
-                      <MessageContent>
-                        {/* Render text content - skip for tool messages */}
-                        {message.role !== 'tool' && message.content && <MessageResponse>{message.content}</MessageResponse>}
+                  messages.map((message, index) => {
+                    // For tool role messages: show based on display mode
+                    if (message.role === 'tool') {
+                      if (toolDisplayMode === 'none') return null;
+                      const toolParts = message.parts?.filter(p =>
+                        p.type?.startsWith('tool-') &&
+                        (p.state === 'output-available' || p.state === 'output-error')
+                      );
+                      if (!toolParts?.length) return null;
+                      if (toolDisplayMode === 'brief') {
+                        const names = toolParts.map(p => p.type.replace('tool-', ''));
+                        const hasError = toolParts.some(p => p.state === 'output-error');
+                        return (
+                          <Message key={index} from="assistant">
+                            <MessageContent>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-1">
+                                <WrenchIcon className="size-3" />
+                                <span>Used {names.join(', ')}</span>
+                                {hasError
+                                  ? <XCircleIcon className="size-3 text-red-500" />
+                                  : <CheckCircleIcon className="size-3 text-green-500" />}
+                              </div>
+                            </MessageContent>
+                          </Message>
+                        );
+                      }
+                      return (
+                        <Message key={index} from="assistant">
+                          <MessageContent>
+                            {toolParts.map(renderToolPart)}
+                          </MessageContent>
+                        </Message>
+                      );
+                    }
 
-                        {/* Render tool parts - only show tool results (output or error), not assistant tool calls */}
-                        {message.parts?.filter(p =>
-                          p.type?.startsWith('tool-') &&
-                          (p.state === 'output-available' || p.state === 'output-error')
-                        ).map(renderToolPart)}
-                      </MessageContent>
-                    </Message>
-                  ))
+                    // Skip assistant messages that only have tool calls (no text content)
+                    if (message.role === 'assistant' && !message.content && message.tool_calls) {
+                      return null;
+                    }
+
+                    return (
+                      <Message key={index} from={message.role}>
+                        <MessageContent>
+                          {message.content && <MessageResponse>{message.content}</MessageResponse>}
+                        </MessageContent>
+                      </Message>
+                    );
+                  })
+                )}
+                {isLoading && !(messages.length > 0 && messages[messages.length - 1].role === 'assistant' && messages[messages.length - 1].content) && (
+                  <Message from="assistant">
+                    <MessageContent>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader size={14} />
+                        <span>{currentThinkingMessage}</span>
+                      </div>
+                    </MessageContent>
+                  </Message>
                 )}
               </ConversationContent>
               <ConversationScrollButton />

@@ -172,3 +172,9 @@
 .prose code::after {
   content: none !important;
 }
+
+/* Hide KaTeX error color during streaming — incomplete math appears as normal text
+   instead of flashing red, then renders correctly once the full expression arrives */
+.katex-error {
+  color: transparent !important;
+}
