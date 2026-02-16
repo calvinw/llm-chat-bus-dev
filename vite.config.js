@@ -5,7 +5,12 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
 import fs from 'fs';
 
-const systemPrompt = fs.readFileSync('llm_prompt.md', 'utf-8');
+const systemPrompts = {
+  advancedRoa: fs.readFileSync('prompts/advanced-roa-analysis.md', 'utf-8'),
+  basicFinancials: fs.readFileSync('prompts/basic-financials.md', 'utf-8'),
+  quizBasicFinancials: fs.readFileSync('prompts/quiz-basic-financials.md', 'utf-8'),
+  quizRoaAnalysis: fs.readFileSync('prompts/quiz-roa-analysis.md', 'utf-8'),
+};
 
 export default defineConfig({
   plugins: [
@@ -14,14 +19,14 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'llm_prompt.md',
-          dest: '.'
+          src: 'prompts/*.md',
+          dest: 'prompts'
         }
       ]
     })
   ],
   define: {
-    __SYSTEM_PROMPT__: JSON.stringify(systemPrompt),
+    __SYSTEM_PROMPTS__: JSON.stringify(systemPrompts),
   },
   resolve: {
     alias: {

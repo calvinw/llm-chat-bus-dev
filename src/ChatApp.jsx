@@ -43,7 +43,7 @@ import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, P
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
-import { SYSTEM_PROMPT } from '@/utils/systemPrompt';
+import { SYSTEM_PROMPTS, DEFAULT_PROMPT_KEY, SYSTEM_PROMPT } from '@/utils/systemPrompt';
 import { exportConversationAsMarkdown, downloadMarkdown } from '@/utils/exportMarkdown';
 import { printConversationWithTable } from '@/utils/exportPdf';
 import {
@@ -195,12 +195,29 @@ const getFinancialDataTool = {
 //   };
 // };
 
-// Suggested prompts for quick testing
-  const SUGGESTED_PROMPTS = [
+// Suggested prompts per prompt mode
+const SUGGESTED_PROMPTS_BY_MODE = {
+  'advanced-roa': [
     'Can you do a ROA breakdown for these companies?',
     'Can you help me compare the two companies shown',
     'Can you explain the tradeoffs between high margin/low turn and low margin/high turn approaches for businesses',
-  ];
+  ],
+  'basic-financials': [
+    'Can you walk me through the financial numbers for these companies?',
+    'What does gross margin mean and how is it calculated?',
+    'Help me understand the difference between these two companies',
+  ],
+  'quiz-basic': [
+    'Quiz me on the basics of the financial data shown',
+    'Test my knowledge of financial terms',
+    'Ask me some questions about these companies',
+  ],
+  'quiz-roa': [
+    'Quiz me on ROA analysis for these companies',
+    'Test my understanding of the Strategic Profit Model',
+    'Ask me questions about margin vs turnover tradeoffs',
+  ],
+};
 
 
 export default function ChatApp() {
@@ -215,6 +232,18 @@ export default function ChatApp() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
   const [toolDisplayMode, setToolDisplayMode] = useState(() => localStorage.getItem('chatapp_tool_display') || 'none');
+
+  // Prompt mode state — null means no scenario chosen yet
+  const [promptKey, setPromptKey] = useState(() => localStorage.getItem('chatapp_prompt_mode') || null);
+  const activeSystemPrompt = promptKey ? (SYSTEM_PROMPTS[promptKey]?.prompt || SYSTEM_PROMPT) : null;
+  const activeSuggestedPrompts = promptKey ? (SUGGESTED_PROMPTS_BY_MODE[promptKey] || SUGGESTED_PROMPTS_BY_MODE[DEFAULT_PROMPT_KEY]) : [];
+  const scenarioChosen = promptKey !== null;
+
+  const handlePromptModeChange = (key) => {
+    setPromptKey(key);
+    localStorage.setItem('chatapp_prompt_mode', key);
+    clearMessages();
+  };
 
   // Iframe panel state
   const [iframeSrc, setIframeSrc] = useState(initialIframeConfig.src);
@@ -612,12 +641,12 @@ export default function ChatApp() {
   // Handle form submission from PromptInput
   const handleSubmit = async (message) => {
     if (!message.text?.trim()) return;
-    await sendMessage(message.text, { model: selectedModel, systemPrompt: SYSTEM_PROMPT });
+    await sendMessage(message.text, { model: selectedModel, systemPrompt: activeSystemPrompt });
   };
 
   // Handle suggested prompt click
   const handleSuggestedPrompt = async (prompt) => {
-    await sendMessage(prompt, { model: selectedModel, systemPrompt: SYSTEM_PROMPT });
+    await sendMessage(prompt, { model: selectedModel, systemPrompt: activeSystemPrompt });
   };
 
   // Clear conversation
@@ -760,6 +789,18 @@ export default function ChatApp() {
                 <Printer className="size-4 mr-2" />
                 Save PDF
               </Button>
+              <Select value={promptKey || ''} onValueChange={handlePromptModeChange}>
+                <SelectTrigger className="w-auto h-8 text-sm gap-1 px-3">
+                  <SelectValue placeholder="Choose Scenario" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(SYSTEM_PROMPTS).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm">
@@ -968,24 +1009,29 @@ export default function ChatApp() {
                       </div>
                     </div>
 
-                    {/* System Prompt */}
+                    {/* System Prompts */}
                     <div className="space-y-2">
-                      <Label>System Prompt</Label>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="justify-start w-full"
-                      >
-                        <a
-                          href="./system-prompt.html"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink className="size-4 mr-2" />
-                          View System Prompt
-                        </a>
-                      </Button>
+                      <Label>System Prompts</Label>
+                      <div className="flex flex-col gap-2">
+                        {Object.entries(SYSTEM_PROMPTS).map(([key, { label, file }]) => (
+                          <Button
+                            key={key}
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className={`justify-start w-full${key === promptKey ? ' border-primary' : ''}`}
+                          >
+                            <a
+                              href={`./prompts/${file}.md`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="size-4 mr-2" />
+                              {label}{key === promptKey ? ' (active)' : ''}
+                            </a>
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </SheetContent>
@@ -1001,22 +1047,33 @@ export default function ChatApp() {
                   <div className="flex h-full items-center justify-center text-center">
                     <div className="max-w-lg space-y-4">
                       <MessageSquare className="mx-auto size-12 text-muted-foreground" />
-                      <h2 className="text-lg font-semibold">Start a conversation</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Ask about financial analysis, ROA breakdown, or company comparisons
-                      </p>
-                      <div className="flex flex-col gap-2 pt-2">
-                        {SUGGESTED_PROMPTS.map((prompt, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleSuggestedPrompt(prompt)}
-                            className="text-sm px-4 py-2.5 rounded-lg bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border text-left"
-                            disabled={isLoading}
-                          >
-                            {prompt}
-                          </button>
-                        ))}
-                      </div>
+                      {scenarioChosen ? (
+                        <>
+                          <h2 className="text-lg font-semibold">{SYSTEM_PROMPTS[promptKey]?.label}</h2>
+                          <p className="text-sm text-muted-foreground">
+                            {SYSTEM_PROMPTS[promptKey]?.description}
+                          </p>
+                          <div className="flex flex-col gap-2 pt-2">
+                            {activeSuggestedPrompts.map((prompt, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleSuggestedPrompt(prompt)}
+                                className="text-sm px-4 py-2.5 rounded-lg bg-muted hover:bg-muted-foreground/10 text-muted-foreground transition-colors border text-left"
+                                disabled={isLoading}
+                              >
+                                {prompt}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-lg font-semibold">Start by choosing a scenario for the assistant</h2>
+                          <p className="text-sm text-muted-foreground">
+                            Use the "Choose Scenario" dropdown above to select a mode
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1088,7 +1145,10 @@ export default function ChatApp() {
           <div className="border-t p-4">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
-                <PromptInputTextarea placeholder="Type your message..." />
+                <PromptInputTextarea
+                  placeholder={scenarioChosen ? "Type your message..." : "Choose a scenario to start..."}
+                  disabled={!scenarioChosen}
+                />
               </PromptInputBody>
               <PromptInputFooter>
                 <PromptInputTools>
