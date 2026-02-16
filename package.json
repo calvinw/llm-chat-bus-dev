@@ -13,7 +13,8 @@
     "sync:busmgmt": "node scripts/sync-busmgmt-assets.mjs",
     "build": "npm run build:wrapper && npm run build:busmgmt && npm run sync:busmgmt",
     "preview": "vite preview",
-    "preview:integration": "npm run build && vite preview --host --port 4173"
+    "preview:integration": "npm run build && vite preview --host --port 4173",
+    "serve": "npm run build && python3 -m http.server 4000 -d docs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.7",
