@@ -39,7 +39,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon, Trash2 } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
@@ -673,6 +673,12 @@ export default function ChatApp() {
     printConversationWithTable(iframeRef.current, messages);
   };
 
+  // Clear all localStorage values and reload
+  const handleClearAllSettings = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const selectedModelName = selectedModel;
   const mcpStatusClassName = mcpConnectionStatus === 'connected'
     ? 'border-green-600 text-green-600'
@@ -1032,6 +1038,23 @@ export default function ChatApp() {
                           </Button>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Clear All Settings */}
+                    <div className="space-y-2 pt-2 border-t">
+                      <Label className="text-destructive">Danger Zone</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearAllSettings}
+                        className="justify-start w-full border-destructive text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="size-4 mr-2" />
+                        Clear All Settings
+                      </Button>
+                      <CardDescription className="text-xs">
+                        Clears all saved settings (API key, model, URLs) and reloads the page.
+                      </CardDescription>
                     </div>
                   </div>
                 </SheetContent>
