@@ -1,6 +1,7 @@
 {
   "name": "llm-chat-bus-dev",
   "postCreateCommand": "bash .devcontainer/postcreate.sh",
+  "postStartCommand": "bash start-dev.sh",
   "forwardPorts": [8081, 3000],
   "portsAttributes": {
     "8081": {
