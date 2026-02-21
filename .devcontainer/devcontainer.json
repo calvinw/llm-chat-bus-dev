@@ -11,5 +11,10 @@
       "label": "BusMgmt",
       "onAutoForward": "silent"
     }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
   }
 }
