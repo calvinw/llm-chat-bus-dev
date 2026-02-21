@@ -4,6 +4,7 @@
 WORKSPACE="${CODESPACE_VSCODE_FOLDER:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 LOG="$HOME/.dev-server.log"
 BUSMGMT_LOG="$HOME/.busmgmt-server.log"
+BUSMGMT_DIR="$WORKSPACE/integrations/BusMgmtBenchmarks"
 
 echo ""
 echo "┌──────────────────────────────────────┐"
@@ -32,17 +33,39 @@ if [ -f ~/.dev-server.pid ]; then
   rm -f ~/.dev-server.pid
 fi
 
+# Ensure submodule is initialized
+if [ ! -f "$BUSMGMT_DIR/package.json" ]; then
+  echo "→ Initializing BusMgmt submodule..."
+  (cd "$WORKSPACE" && git submodule update --init --recursive)
+fi
+
+# Ensure BusMgmt dependencies are installed
+if [ ! -d "$BUSMGMT_DIR/node_modules" ]; then
+  echo "→ Installing BusMgmt dependencies..."
+  (cd "$BUSMGMT_DIR" && npm install)
+fi
+
 # Start BusMgmt submodule server on port 3000
 echo "→ Starting BusMgmt server on port 3000..."
 nohup bash -c "cd '$WORKSPACE' && npm run dev:busmgmt" > "$BUSMGMT_LOG" 2>&1 &
 echo $! > ~/.busmgmt-server.pid
 
-# Wait for BusMgmt to be ready
+# Wait for BusMgmt to be ready (60 second timeout)
 echo "→ Waiting for BusMgmt to be ready..."
+TIMEOUT=60
+ELAPSED=0
 until curl -s http://localhost:3000 > /dev/null 2>&1; do
   sleep 1
+  ELAPSED=$((ELAPSED + 1))
+  if [ $ELAPSED -ge $TIMEOUT ]; then
+    echo "⚠ BusMgmt did not start within ${TIMEOUT}s. Check logs: tail -f $BUSMGMT_LOG"
+    break
+  fi
 done
-echo "✓ BusMgmt ready on port 3000."
+
+if curl -s http://localhost:3000 > /dev/null 2>&1; then
+  echo "✓ BusMgmt ready on port 3000."
+fi
 
 echo ""
 
@@ -52,7 +75,7 @@ nohup bash -c "cd '$WORKSPACE' && npm run dev" > "$LOG" 2>&1 &
 echo $! > ~/.dev-server.pid
 
 echo ""
-echo "✓ Both dev servers started in the background."
+echo "✓ Dev servers started in the background."
 echo ""
 echo "  Chat app:  http://localhost:8081  (logs: tail -f $LOG)"
 echo "  BusMgmt:   http://localhost:3000  (logs: tail -f $BUSMGMT_LOG)"
