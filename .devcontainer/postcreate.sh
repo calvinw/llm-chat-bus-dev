@@ -34,11 +34,6 @@ echo "✓ Integration setup complete."
 
 echo ""
 
-# Set up dev server auto-start hook in ~/.bashrc
-echo "→ Setting up dev server hook..."
-bash "$WORKSPACE/.devcontainer/setup.sh"
-
-echo ""
 echo "✓ Codespace setup complete."
-echo "  Open a terminal to start the dev servers."
+echo "  Run 'bash start-dev.sh' to start the dev servers."
 echo ""
