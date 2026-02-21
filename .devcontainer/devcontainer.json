@@ -11,6 +11,9 @@
       "onAutoForward": "silent"
     }
   },
+  "remoteEnv": {
+    "CLAUDE_CODE_DISABLE_VSCODE_EXTENSION": "1"
+  },
   "customizations": {
     "vscode": {
       "extensions": []
