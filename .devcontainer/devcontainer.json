@@ -4,7 +4,7 @@
   "portsAttributes": {
     "8081": {
       "label": "Chat App",
-      "onAutoForward": "notify"
+      "onAutoForward": "openBrowser"
     },
     "3000": {
       "label": "BusMgmt",
