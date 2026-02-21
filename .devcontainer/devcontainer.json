@@ -1,0 +1,15 @@
+{
+  "name": "llm-chat-bus-dev",
+  "postCreateCommand": "bash .devcontainer/postcreate.sh",
+  "forwardPorts": [8081, 3000],
+  "portsAttributes": {
+    "8081": {
+      "label": "Chat App",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "BusMgmt",
+      "onAutoForward": "silent"
+    }
+  }
+}
