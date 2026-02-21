@@ -19,39 +19,33 @@ On first terminal open, `start-dev.sh` runs automatically and starts both server
 
 **Port 8081 (chat app):** Working.
 
-**Port 3000 (BusMgmt submodule):** Not working — exact cause unknown.
+**Port 3000 (BusMgmt submodule):** Working.
 
-## What has been tried
+## What was fixed
 
-1. Added `.app.github.dev` to `allowedHosts` in `integrations/BusMgmtBenchmarks/vite.config.ts`
-   — Vite 5+ blocks requests from hosts not in an explicit allowedHosts list.
-   — This fix was pushed to the BusMgmtBenchmarks submodule repo and the parent pointer updated.
+### Iframe URL not resolving in Codespaces (`src/ChatApp.jsx`)
 
-2. Added `host: true`, `allowedHosts`, and `hmr.clientPort: 443` to the main app's `vite.config.js`
-   — Same issue would affect port 8081 without this fix.
+In Codespaces, the browser connects to the app via a forwarded hostname
+(e.g. `https://[name]-8081.app.github.dev`). The iframe was hardcoded to
+`http://localhost:3000/...`, which the browser resolves against the user's
+local machine — not the Codespace container.
 
-3. Made `start-dev.sh` more robust:
-   - Checks if submodule is initialized (runs `git submodule update --init --recursive` if not)
-   - Checks if BusMgmt `node_modules` exist (runs `npm install` if not)
-   - Added a 60-second timeout on the BusMgmt wait loop so the chat app always starts even if BusMgmt fails
+**Fix:** At runtime, detect if `window.location.hostname` ends with
+`.app.github.dev` and swap the port in the hostname to derive the BusMgmt URL:
 
-## What to investigate
-
-Run this first to see the actual BusMgmt server output:
-
-```bash
-cat ~/.busmgmt-server.log
+```
+https://[name]-8081.app.github.dev  →  https://[name]-3000.app.github.dev
 ```
 
-Then pull the latest fixes and restart both servers:
+Also translates any stale `localhost:3000` URL saved in `localStorage` so
+existing sessions aren't broken. Falls back to `localhost:3000` in all
+non-Codespaces environments.
 
-```bash
-git pull
-bash start-dev.sh
-```
+### allowedHosts blocking Vite (`integrations/BusMgmtBenchmarks/vite.config.ts`)
 
-## Likely causes if BusMgmt still fails
+Vite 5+ blocks requests from hosts not in an explicit `allowedHosts` list.
+Added `.app.github.dev` to `allowedHosts`, plus `host: true` and
+`hmr.clientPort: 443` for correct Codespaces HMR behaviour. This fix was
+pushed to the BusMgmtBenchmarks submodule repo and the parent pointer updated.
 
-- **Submodule not initialized**: `integrations/BusMgmtBenchmarks/` is empty or missing `node_modules`. The updated `start-dev.sh` guards against this.
-- **allowedHosts still blocking**: If the submodule was checked out before the fix was pushed, the old `vite.config.ts` without `.app.github.dev` would still be in use. `git pull` + `bash start-dev.sh` should resolve this since the script now re-checks the submodule state.
-- **Something else in the log**: The `cat ~/.busmgmt-server.log` output will show the real error.
+Same fix applied to the main app's `vite.config.js`.
