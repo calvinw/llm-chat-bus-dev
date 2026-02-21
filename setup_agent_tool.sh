@@ -20,6 +20,8 @@ case "$choice" in
     echo ""
     echo "→ Installing Claude Code..."
     curl -fsSL https://claude.ai/install.sh | bash
+    echo "→ Removing VS Code extension (CLI only)..."
+    code --uninstall-extension anthropic.claude-code 2>/dev/null || true
     ;;
   2)
     echo ""
