@@ -54,9 +54,33 @@ import {
 
 const BRIDGE_REQUEST_TYPE = 'busmgmt.bridge.request';
 const BRIDGE_RESPONSE_TYPE = 'busmgmt.bridge.response';
-const DEFAULT_DEV_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_DEV || 'http://localhost:3000/company_to_company.html?iframe=true';
+// In GitHub Codespaces, the browser can't reach localhost:3000 — it must use the
+// forwarded URL (e.g. https://[name]-3000.app.github.dev). Detect this by checking
+// if the current hostname matches the Codespaces pattern and swap the port.
+function getDevIframeSrc() {
+  if (import.meta.env.VITE_IFRAME_SRC_DEV) return import.meta.env.VITE_IFRAME_SRC_DEV;
+  const { hostname } = window.location;
+  if (hostname.endsWith('.app.github.dev')) {
+    const host3000 = hostname.replace(/-\d+\.app\.github\.dev$/, '-3000.app.github.dev');
+    return `https://${host3000}/company_to_company.html?iframe=true`;
+  }
+  return 'http://localhost:3000/company_to_company.html?iframe=true';
+}
+
+const DEFAULT_DEV_IFRAME_SRC = getDevIframeSrc();
 const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/company_to_company.html?iframe=true';
 const DEFAULT_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC || (import.meta.env.DEV ? DEFAULT_DEV_IFRAME_SRC : DEFAULT_PROD_IFRAME_SRC);
+
+// If a localhost:3000 URL was saved to localStorage from a non-Codespaces session,
+// it won't work in Codespaces. Translate it to the forwarded URL.
+function translateStoredIframeSrc(stored) {
+  if (!stored) return null;
+  const { hostname } = window.location;
+  if (hostname.endsWith('.app.github.dev') && /localhost:3000/.test(stored)) {
+    return DEFAULT_DEV_IFRAME_SRC;
+  }
+  return stored;
+}
 
 function normalizePathname(pathname) {
   if (!pathname) return '/';
@@ -222,7 +246,7 @@ const SUGGESTED_PROMPTS_BY_MODE = {
 
 export default function ChatApp() {
   const initialIframeConfig = resolveIframeSource(
-    localStorage.getItem('chatapp_iframe_src') || DEFAULT_IFRAME_SRC
+    translateStoredIframeSrc(localStorage.getItem('chatapp_iframe_src')) || DEFAULT_IFRAME_SRC
   );
 
   // Settings state
