@@ -40,5 +40,10 @@ export default defineConfig({
   },
   server: {
     port: 8081,
+    host: true,
+    allowedHosts: ['.app.github.dev', 'localhost'],
+    hmr: {
+      clientPort: 443,
+    },
   }
 });
