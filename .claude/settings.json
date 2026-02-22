@@ -1,5 +1,0 @@
-{
-  "env": {
-    "CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL": "1"
-  }
-}
