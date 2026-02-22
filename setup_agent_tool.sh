@@ -1,6 +1,8 @@
 #!/bin/bash
 # setup_agent_tool.sh — install your AI coding assistant
 
+export CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL=1
+
 echo ""
 echo "┌──────────────────────────────────────┐"
 echo "│   Install AI Coding Assistant        │"
