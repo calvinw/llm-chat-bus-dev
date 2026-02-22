@@ -1,7 +1,6 @@
 #!/bin/bash
-# start_servers.sh — Run this once after your Codespace opens.
-# It installs dependencies and starts both dev servers.
-# Safe to re-run at any time to restart the servers.
+# start_servers.sh — Run this once after cloning to install dependencies and
+# start both dev servers. Safe to re-run at any time to restart the servers.
 
 set -e
 
@@ -9,7 +8,6 @@ WORKSPACE="${CODESPACE_VSCODE_FOLDER:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && p
 BUSMGMT_DIR="$WORKSPACE/integrations/BusMgmtBenchmarks"
 CHAT_LOG="$HOME/.chat-server.log"
 BUSMGMT_LOG="$HOME/.busmgmt-server.log"
-DOMAIN="${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
 
 echo ""
 echo "┌──────────────────────────────────────┐"
@@ -61,7 +59,7 @@ echo "┄┄┄ Step 3/3: Starting dev servers ┄┄┄"
 
 # BusMgmt on port 3000
 echo "→ Starting BusMgmt server..."
-nohup bash -c "cd '$WORKSPACE' && npm run dev:busmgmt" > "$BUSMGMT_LOG" 2>&1 &
+nohup bash -c "cd '$WORKSPACE' && npm --prefix integrations/BusMgmtBenchmarks run dev -- --no-open" > "$BUSMGMT_LOG" 2>&1 &
 
 # Wait up to 60s for BusMgmt to be ready before starting the chat app
 ELAPSED=0
@@ -86,8 +84,14 @@ echo "┌───────────────────────�
 echo "│     ✓ Ready!                         │"
 echo "└──────────────────────────────────────┘"
 echo ""
-echo "  Chat app : https://${CODESPACE_NAME}-8081.${DOMAIN}"
-echo "  BusMgmt  : https://${CODESPACE_NAME}-3000.${DOMAIN}"
+if [ -n "$CODESPACE_NAME" ]; then
+  DOMAIN="${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
+  echo "  Chat app : https://${CODESPACE_NAME}-8081.${DOMAIN}"
+  echo "  BusMgmt  : https://${CODESPACE_NAME}-3000.${DOMAIN}"
+else
+  echo "  Chat app : http://localhost:8081"
+  echo "  BusMgmt  : http://localhost:3000"
+fi
 echo ""
 echo "  Logs:"
 echo "    tail -f $CHAT_LOG"

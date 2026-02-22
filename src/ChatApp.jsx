@@ -62,13 +62,13 @@ function getDevIframeSrc() {
   const { hostname } = window.location;
   if (hostname.endsWith('.app.github.dev')) {
     const host3000 = hostname.replace(/-\d+\.app\.github\.dev$/, '-3000.app.github.dev');
-    return `https://${host3000}/company_to_company.html?iframe=true`;
+    return `https://${host3000}/?iframe=true`;
   }
-  return 'http://localhost:3000/company_to_company.html?iframe=true';
+  return 'http://localhost:3000/?iframe=true';
 }
 
 const DEFAULT_DEV_IFRAME_SRC = getDevIframeSrc();
-const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/company_to_company.html?iframe=true';
+const DEFAULT_PROD_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC_PROD || './busmgmt/?iframe=true';
 const DEFAULT_IFRAME_SRC = import.meta.env.VITE_IFRAME_SRC || (import.meta.env.DEV ? DEFAULT_DEV_IFRAME_SRC : DEFAULT_PROD_IFRAME_SRC);
 
 // If a localhost:3000 URL was saved to localStorage from a non-Codespaces session,
