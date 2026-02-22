@@ -28,9 +28,15 @@ case "$choice" in
     echo "→ Installing Opencode..."
     curl -fsSL https://opencode.ai/install | bash
     # Symlink into /usr/local/bin so it's available immediately in any terminal
+    # Check standard locations
     if [ -f "$HOME/.local/bin/opencode" ]; then
-      ln -sf "$HOME/.local/bin/opencode" /usr/local/bin/opencode
+      sudo ln -sf "$HOME/.local/bin/opencode" /usr/local/bin/opencode
       echo "→ Linked opencode to /usr/local/bin/opencode"
+    elif [ -f "$HOME/.opencode/bin/opencode" ]; then
+      sudo ln -sf "$HOME/.opencode/bin/opencode" /usr/local/bin/opencode
+      echo "→ Linked opencode to /usr/local/bin/opencode"
+    else
+        echo "Could not find opencode binary to link. Please check installation."
     fi
     ;;
   3)
