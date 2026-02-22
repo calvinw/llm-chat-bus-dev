@@ -27,10 +27,11 @@ case "$choice" in
     echo ""
     echo "→ Installing Opencode..."
     curl -fsSL https://opencode.ai/install | bash
-    export PATH="$HOME/.local/bin:$PATH"
-    # Persist ~/.local/bin in PATH for future sessions
-    grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc 2>/dev/null || \
-      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    # Symlink into /usr/local/bin so it's available immediately in any terminal
+    if [ -f "$HOME/.local/bin/opencode" ]; then
+      ln -sf "$HOME/.local/bin/opencode" /usr/local/bin/opencode
+      echo "→ Linked opencode to /usr/local/bin/opencode"
+    fi
     ;;
   3)
     echo ""
@@ -47,13 +48,6 @@ case "$choice" in
     exit 1
     ;;
 esac
-
-# Reload shell configuration to pick up new PATH entries
-if [ -n "$BASH_VERSION" ]; then
-  source ~/.bashrc 2>/dev/null || true
-elif [ -n "$ZSH_VERSION" ]; then
-  source ~/.zshrc 2>/dev/null || true
-fi
 
 echo ""
 echo "✓ Done! Follow any authentication prompts above to get started."

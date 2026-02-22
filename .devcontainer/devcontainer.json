@@ -1,6 +1,6 @@
 {
   "name": "llm-chat-bus-dev",
-  "postCreateCommand": "grep -qxF 'export PATH=\"$HOME/.local/bin:$PATH\"' ~/.bashrc || echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc && echo 'Run: bash start.sh'",
+  "postCreateCommand": "echo 'Run: bash setup_agent_tool.sh'",
   "portsAttributes": {
     "8081": {
       "label": "Chat App",
