@@ -1,6 +1,5 @@
 {
   "name": "llm-chat-bus-dev",
-  "postCreateCommand": "bash .devcontainer/postcreate.sh",
   "portsAttributes": {
     "8081": {
       "label": "Chat App",

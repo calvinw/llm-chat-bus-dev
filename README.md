@@ -2,6 +2,34 @@
 
 A React-based LLM chat application that integrates with the BusMgmtBenchmarks financial comparison webapp. Students can compare company financial data through conversational AI, with the chat reading and controlling an embedded iframe showing financial metrics. Built with React 19, Vite 7, Tailwind CSS 4, and Radix UI.
 
+## For Students — Getting Started
+
+When your Codespace opens, do these three things:
+
+**1. Open a terminal** (Terminal → New Terminal in the menu bar)
+
+**2. Run the setup script:**
+
+```bash
+bash start.sh
+```
+
+This installs everything and starts both servers. It takes a few minutes the first time. When it finishes you'll see a confirmation with the URLs.
+
+**3. Enter your OpenRouter API key:**
+
+- Click the **Settings** gear icon in the chat interface
+- Paste your API key (get one free at [openrouter.ai](https://openrouter.ai/))
+- Click Save
+
+That's it — you're ready to chat.
+
+> **Tip:** The script will print your app URL when it finishes — it looks like `https://YOUR-CODESPACE-NAME-8081.app.github.dev`. You can also find it in the **Ports** tab in VS Code next to port **8081**.
+
+> **To restart the servers** at any time (e.g. after closing and reopening your Codespace), just run `bash start.sh` again in the terminal.
+
+---
+
 ## Features
 
 - **Financial Data Integration** - Chat reads/controls company selections and extracts financial table data from the embedded BusMgmt app via postMessage bridge
