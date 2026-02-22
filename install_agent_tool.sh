@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_agent_tool.sh — install your AI coding assistant
+# install_agent_tool.sh — install your AI coding assistant
 
 export CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL=1
 
@@ -50,7 +50,7 @@ case "$choice" in
     npm install -g @openai/codex
     ;;
   *)
-    echo "Invalid choice. Run 'bash setup_agent_tool.sh' to try again."
+    echo "Invalid choice. Run 'bash install_agent_tool.sh' to try again."
     exit 1
     ;;
 esac
