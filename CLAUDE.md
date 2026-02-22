@@ -95,7 +95,6 @@ Tools follow the OpenAI function calling format. MCP remote tools are merged wit
 - **Default server**: `https://bus-mgmt-databases.mcp.mathplosion.com/mcp-dolt-database/sse`
 - **Auto-discovery**: Tools discovered from connected servers and merged with local tools
 - **CORS proxy support**: Optional proxy for cross-origin MCP servers
-- **Python server**: Example MCP server included (`mcp_server.py`)
 
 ### Key Features
 - **React 19** with JSX syntax

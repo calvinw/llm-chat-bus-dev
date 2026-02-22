@@ -148,7 +148,7 @@ The financial comparison app ([BusMgmtBenchmarks](https://github.com/calvinw/Bus
 
 ### MCP Server
 
-Configure an MCP server URL in Settings to add remote database tools. The default connects to the BusMgmt Dolt database server. An example Python MCP server is included (`mcp_server.py`).
+Configure an MCP server URL in Settings to add remote database tools. The default connects to the BusMgmt Dolt database server.
 
 ## Deployment
 
