@@ -44,6 +44,13 @@ case "$choice" in
     ;;
 esac
 
+# Reload shell configuration to pick up new PATH entries
+if [ -n "$BASH_VERSION" ]; then
+  source ~/.bashrc 2>/dev/null || true
+elif [ -n "$ZSH_VERSION" ]; then
+  source ~/.zshrc 2>/dev/null || true
+fi
+
 echo ""
 echo "✓ Done! Follow any authentication prompts above to get started."
 echo ""
