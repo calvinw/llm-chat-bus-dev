@@ -1,0 +1,17 @@
+{
+  "name": "llm-chat-bus-dev",
+  "postCreateCommand": "echo 'Run: bash start.sh'",
+  "portsAttributes": {
+    "8081": {
+      "label": "Chat App",
+      "onAutoForward": "openBrowser"
+    },
+    "3000": {
+      "label": "BusMgmt",
+      "onAutoForward": "silent"
+    }
+  },
+  "remoteEnv": {
+    "CLAUDE_CODE_DISABLE_VSCODE_EXTENSION": "1"
+  }
+}
