@@ -27,6 +27,10 @@ case "$choice" in
     echo ""
     echo "→ Installing Opencode..."
     curl -fsSL https://opencode.ai/install | bash
+    export PATH="$HOME/.local/bin:$PATH"
+    # Persist ~/.local/bin in PATH for future sessions
+    grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc 2>/dev/null || \
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     ;;
   3)
     echo ""
