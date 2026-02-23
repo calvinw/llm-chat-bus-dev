@@ -729,22 +729,10 @@ export default function ChatApp() {
 
   // Rotating thinking messages
   const thinkingMessages = [
-    'Checking the final exam…',
-    'Visiting Chegg…',
-    'Asking students from last semester…',
-    'Wait, we have a textbook?…',
-    'Reviewing my Rate My Professor comments…',
-    'Pretending to understand the balance sheet…',
-    'Cramming before the midterm…',
-    "Looking up 'accounting' on Wikipedia…",
-    'Asking ChatGPT… wait…',
-    'Hoping the curve saves us…',
-    'Checking if the library is open…',
-    'Raising my hand… never!',
-    'Emailing the professor at 2 AM…',
-    'Praying to the Excel gods…',
-    "Copying the smart kid's spreadsheet…",
-    'Watching a YouTube tutorial…',
+    'Waiting for Souyen to make the User Interface…',
+    "Asking Diana's GPT for a reading…",
+    "Asking Elena when she's ready to code…",
+    'Waiting for Smera to get to Upper Division…',
   ];
 
   const toolMessages = [
