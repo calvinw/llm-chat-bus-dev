@@ -1,187 +1,55 @@
 # FIT Retail Index Chat
 
-A React-based LLM chat application that integrates with the BusMgmtBenchmarks financial comparison webapp. Students can compare company financial data through conversational AI, with the chat reading and controlling an embedded iframe showing financial metrics. Built with React 19, Vite 7, Tailwind CSS 4, and Radix UI.
+An advanced AI-powered financial analysis platform designed for retail industry benchmarking. This application provides a conversational interface side-by-side with an interactive financial dashboard, allowing users to analyze, compare, and visualize complex retail data through natural language.
 
-## For Students — Getting Started
+## Key Features
 
-When your Codespace opens, do these three things:
+### 📊 Conversational Benchmarking
+Analyze the financial performance of 56 major retail companies across 10 industry segments. The AI understands the underlying financial data and can provide insights into margins, growth trends, and competitive positioning.
 
-**1. Open a terminal** (Terminal → New Terminal in the menu bar)
+### 🕹️ Interactive Dashboard Control
+The chat assistant doesn't just talk; it acts. You can ask the AI to:
+- **Switch Companies:** "Compare Walmart and Target for 2023."
+- **Change Years:** "Show me the data for 2019 through 2024."
+- **Sync Views:** The assistant automatically updates the visual charts and tables to match your conversation.
 
-**2. Run the setup script:**
+### 🧠 Multi-Model Intelligence
+Powered by OpenRouter, the app gives you access to the world's leading Large Language Models including **GPT-4o**, **Claude 3.5 Sonnet**, **Gemini 1.5 Pro**, and **Llama 3**. Choose the model that best fits your analytical needs.
 
-```bash
-bash start.sh
-```
+### 🧪 Advanced Financial Tools
+- **Direct Data Extraction:** The AI can "read" the live financial tables to perform custom calculations.
+- **Math & LaTeX Support:** Complex formulas and financial ratios are rendered beautifully using KaTeX.
+- **Reasoning Transparency:** View the AI's "thought process" as it executes multi-step financial analyses.
 
-This installs everything and starts both servers. It takes a few minutes the first time. When it finishes you'll see a confirmation with the URLs.
-
-**3. Enter your OpenRouter API key:**
-
-- Click the **Settings** gear icon in the chat interface
-- Paste your API key (get one free at [openrouter.ai](https://openrouter.ai/))
-- Click Save
-
-That's it — you're ready to chat.
-
-> **Tip:** The script will print your app URL when it finishes — it looks like `https://YOUR-CODESPACE-NAME-8081.app.github.dev`. You can also find it in the **Ports** tab in VS Code next to port **8081**.
-
-> **To restart the servers** at any time (e.g. after closing and reopening your Codespace), just run `bash start.sh` again in the terminal.
+### 📂 Seamless Export
+Download your entire research session as a formatted Markdown document, perfect for inclusion in reports or academic assignments.
 
 ---
 
-## Features
+## Capabilities & AI Tools
 
-- **Financial Data Integration** - Chat reads/controls company selections and extracts financial table data from the embedded BusMgmt app via postMessage bridge
-- **Multiple LLM Support** - Access GPT-4, Claude, Gemini, Llama, and more via OpenRouter
-- **Streaming Responses** - Real-time SSE streaming with tool call chaining (up to 20 rounds)
-- **Tool Calling** - Three built-in tools for iframe interaction, plus MCP remote tools
-- **MCP Integration** - Model Context Protocol support with dual transport auto-detection
-- **Math Rendering** - LaTeX expressions with KaTeX (`$inline$` and `$$display$$`)
-- **Markdown Support** - Streaming markdown rendering with Shiki syntax highlighting
-- **Resizable Split Pane** - Side-by-side iframe + chat layout with draggable divider
-- **Conversation Export** - Save conversations as markdown (compact or detailed)
+The chat assistant has direct access to the following capabilities:
 
-## Quick Start
+| Feature | What the AI can do |
+|---------|-------------------|
+| **Get Selection** | Identify which companies and years are currently displayed. |
+| **Set Selection** | Change the dropdowns for Company 1, Company 2, and their respective years. |
+| **Extract Data** | Pull specific numbers and indicators from the financial comparison tables. |
+| **External Knowledge** | Access broader retail industry data via the Model Context Protocol (MCP). |
 
-### Prerequisites
+---
 
-- Node.js 18+ and npm
+## Technical Reference (For Developers)
 
-### Installation
+The platform is built on a modern high-performance stack:
 
-```bash
-git clone <repository-url>
-cd llm-chat-bus-dev
-npm install
-npm run setup:integration   # Init BusMgmt submodule + install its dependencies
-```
+- **Frontend:** React 19, Vite 7, Tailwind CSS 4, and Radix UI.
+- **AI Integration:** OpenRouter API with SSE streaming and tool-call chaining (up to 20 rounds).
+- **Data Protocol:** Model Context Protocol (MCP) for remote database connectivity.
+- **Architecture:** Monolithic wrapper with a secure `postMessage` bridge to the [BusMgmtBenchmarks](https://github.com/calvinw/BusMgmtBenchmarks) engine.
 
-### Development
-
-Run both servers in separate terminals:
-
-```bash
-# Terminal A: Chat wrapper (http://localhost:8081)
-npm run dev
-
-# Terminal B: BusMgmt app (http://localhost:3000)
-npm run dev:busmgmt
-```
-
-### Build for Production
-
-```bash
-# Full build: wrapper + BusMgmt submodule + sync assets to /docs
-npm run build
-
-# Preview the integrated build
-npm run preview:integration
-```
-
-## Project Structure
-
-```
-src/
-├── main.jsx                    # App entry point (renders ChatApp)
-├── ChatApp.jsx                 # Main chat application component
-├── index.css                   # Global styles and Tailwind imports
-├── components/
-│   ├── ai-elements/            # AI chat UI components
-│   │   ├── conversation.jsx    # Conversation wrapper with auto-scroll
-│   │   ├── message.jsx         # Message display
-│   │   ├── prompt-input.jsx    # Chat input area
-│   │   ├── tool.jsx            # Tool execution display
-│   │   ├── code-block.jsx      # Syntax-highlighted code blocks (Shiki)
-│   │   └── ...                 # loader, reasoning, sources, suggestion, shimmer, model-selector
-│   └── ui/                     # Radix UI wrapper components (19 files)
-├── hooks/
-│   ├── useOpenRouterChat.jsx   # Core chat logic with streaming + tool calling
-│   ├── useModelManager.jsx     # OpenRouter model fetching
-│   └── useMCPManager.jsx       # MCP server connection management
-├── utils/
-│   ├── mcpClient.jsx           # MCP protocol client (dual transport)
-│   ├── httpClient.jsx          # HTTP utilities
-│   ├── mathProcessor.jsx       # KaTeX math preprocessing
-│   ├── exportMarkdown.jsx      # Conversation export
-│   └── systemPrompt.js         # Financial assistant system prompt
-└── lib/
-    └── utils.js                # cn() helper function
-integrations/
-└── BusMgmtBenchmarks/          # Git submodule - financial comparison webapp
-scripts/
-└── sync-busmgmt-assets.mjs     # Copies BusMgmt build output to docs/busmgmt/
-```
-
-## Built-in Tools
-
-Three tools interact with the BusMgmt iframe:
-
-| Tool | Description |
-|------|-------------|
-| `get_selected_companies` | Gets the current company/year dropdown selections |
-| `set_selected_companies` | Sets company and/or year selections (company1, year1, company2, year2) |
-| `get_financial_data` | Extracts the financial comparison table data |
-
-Tools use a postMessage bridge (`busmgmt.bridge.request` / `busmgmt.bridge.response`) with same-origin DOM fallback.
-
-## BusMgmt Integration
-
-The financial comparison app ([BusMgmtBenchmarks](https://github.com/calvinw/BusMgmtBenchmarks)) is integrated as a git submodule at `integrations/BusMgmtBenchmarks`.
-
-- **Dev iframe**: `http://localhost:3000/company_to_company.html`
-- **Prod iframe**: `./busmgmt/company_to_company.html`
-
-### Optional iframe environment overrides
-
-- `VITE_IFRAME_SRC`: full override for all modes
-- `VITE_IFRAME_SRC_DEV`: dev default (used when `VITE_IFRAME_SRC` is not set)
-- `VITE_IFRAME_SRC_PROD`: production default (used when `VITE_IFRAME_SRC` is not set)
-
-## API Configuration
-
-### OpenRouter API Key
-
-1. Sign up at [openrouter.ai](https://openrouter.ai/)
-2. Generate an API key
-3. Enter it in Settings (stored in localStorage)
-
-### MCP Server
-
-Configure an MCP server URL in Settings to add remote database tools. The default connects to the BusMgmt Dolt database server.
-
-## Deployment
-
-### GitHub Pages
-
-Deployment is automatic via **GitHub Actions**. On every push to `main`, the workflow (`.github/workflows/deploy.yml`) builds the app and deploys to GitHub Pages. No build artifacts are committed to the repo.
-
-## Tech Stack
-
-- **React 19** - UI framework
-- **Vite 7** - Build tool and dev server
-- **Tailwind CSS 4** - Utility-first CSS
-- **Radix UI** - Accessible component primitives
-- **KaTeX** - Math typesetting (via remark-math + rehype-katex)
-- **Shiki** - Syntax highlighting
-- **markdown-it** + **streamdown** - Markdown rendering
-- **react-resizable-panels** - Split pane layout
-- **Lucide React** - Icons
-- **Motion** - Animations
-
-## Troubleshooting
-
-### API Key Issues
-- Ensure your OpenRouter API key is valid
-- Check that it's saved in localStorage (`openrouter_api_key`)
-- Try refreshing the page
-
-### Iframe / Tool Issues
-- Make sure the BusMgmt dev server is running (`npm run dev:busmgmt`)
-- Check browser console for bridge timeout errors
-- Verify iframe URL in Settings
-
-### MCP Connection Issues
-- Verify MCP server is running and URL is correct
-- Transport type is auto-detected (streamable-http or SSE legacy)
-- Check CORS configuration on the server
+### Local Development
+- `npm run dev` - Starts the chat wrapper.
+- `npm run dev:busmgmt` - Starts the financial data engine.
+- `npm run build` - Generates a production-ready integrated build in `/docs`.
+- `npm run setup:integration` - Initializes the benchmark submodule.
