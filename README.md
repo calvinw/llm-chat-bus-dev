@@ -1,5 +1,6 @@
 # FIT Retail Index Chat
 
+
 An advanced AI-powered financial analysis platform designed for retail industry benchmarking. This application provides a conversational interface side-by-side with an interactive financial dashboard, allowing users to analyze, compare, and visualize complex retail data through natural language.
 
 ## Key Features
