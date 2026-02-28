@@ -750,6 +750,7 @@ export default function ChatApp() {
     "Copying the smart kid's spreadsheet…",
     'Watching a YouTube tutorial…',
     'Waiting for Vanyaa to commit the code…',
+    "Avoiding answering the professor's email...",
   ];
 
   const toolMessages = [
