@@ -749,6 +749,7 @@ export default function ChatApp() {
     'Praying to the Excel gods…',
     "Copying the smart kid's spreadsheet…",
     'Watching a YouTube tutorial…',
+    'Waiting for Vanyaa to commit the code…',
   ];
 
   const toolMessages = [
