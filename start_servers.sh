@@ -48,7 +48,7 @@ for port in 3000 8081; do
   pids=$(lsof -ti :"$port" 2>/dev/null) || true
   if [ -n "$pids" ]; then
     echo "→ Stopping port $port (PID $pids)..."
-    kill "$pids" 2>/dev/null || true
+    kill $pids 2>/dev/null || true
     sleep 1
   fi
 done
