@@ -34,8 +34,8 @@ This chat renders markdown. In markdown, a plain newline is ignored — text con
 What does Gross Margin represent?
 
 - a) Revenue minus operating expenses
-- b) Revenue minus cost of goods sold
-- c) Net Profit divided by Revenue
+- b) Net Profit divided by Revenue
+- c) Revenue minus cost of goods sold
 - d) Total Assets minus Total Liabilities
 
 True/False example:

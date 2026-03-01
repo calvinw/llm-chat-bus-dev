@@ -33,8 +33,8 @@ This chat renders markdown. In markdown, a plain newline is ignored — text con
 
 What is the formula for ROA using the Strategic Profit Model?
 
-- a) Net Profit Margin % + Asset Turnover
-- b) Net Profit Margin % × Asset Turnover
+- a) Net Profit Margin % × Asset Turnover
+- b) Net Profit Margin % + Asset Turnover
 - c) Gross Margin % × Inventory Turnover
 - d) Operating Profit Margin % ÷ Total Assets
 
