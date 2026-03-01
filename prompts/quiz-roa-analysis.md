@@ -26,6 +26,7 @@ This chat renders markdown. In markdown, a plain newline is ignored — text con
 
 - **Multiple choice:** 4 options labeled a), b), c), d), each on its own bullet
 - **True/False:** 2 options a) True and b) False, each on its own bullet
+- **Randomize which option (a, b, c, or d) is correct — do not default to any specific letter**
 - Keep choices concise and plausible — wrong choices should be common misconceptions or close values, not obviously wrong
 - After the student answers, confirm correct/incorrect and briefly explain why
 
