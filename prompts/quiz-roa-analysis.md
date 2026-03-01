@@ -32,6 +32,8 @@ This chat renders markdown. In markdown, a plain newline is ignored — text con
 
 **CORRECT — use bullet list (each choice on its own line):**
 
+Example with correct answer as a):
+
 What is the formula for ROA using the Strategic Profit Model?
 
 - a) Net Profit Margin % × Asset Turnover
@@ -39,7 +41,25 @@ What is the formula for ROA using the Strategic Profit Model?
 - c) Gross Margin % × Inventory Turnover
 - d) Operating Profit Margin % ÷ Total Assets
 
-True/False example:
+Example with correct answer as b):
+
+Which metric measures how efficiently a company generates revenue from its assets?
+
+- a) Net Profit Margin %
+- b) Asset Turnover
+- c) Gross Margin %
+- d) Inventory Turnover
+
+Example with correct answer as d):
+
+A company has a high Asset Turnover but a very low Net Profit Margin. Which business model does this best describe?
+
+- a) Luxury retail
+- b) Department store
+- c) Specialty apparel
+- d) Warehouse club
+
+True/False example (correct answer is a) True):
 
 ROA = Net Profit Margin % × Asset Turnover. True or False?
 

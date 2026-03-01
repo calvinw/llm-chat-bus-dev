@@ -32,6 +32,8 @@ This chat renders markdown. In markdown, a plain newline is ignored — text con
 
 **CORRECT — use bullet list (each choice on its own line):**
 
+Example with correct answer as c):
+
 What does Gross Margin represent?
 
 - a) Revenue minus operating expenses
@@ -39,7 +41,25 @@ What does Gross Margin represent?
 - c) Revenue minus cost of goods sold
 - d) Total Assets minus Total Liabilities
 
-True/False example:
+Example with correct answer as d):
+
+Which of the following is a balance sheet item, not an income statement item?
+
+- a) Gross Margin
+- b) Operating Profit
+- c) Net Profit
+- d) Total Assets
+
+Example with correct answer as b):
+
+What is Net Profit Margin?
+
+- a) Gross Margin divided by Revenue
+- b) Net Profit divided by Revenue
+- c) Revenue minus COGS
+- d) Operating Profit divided by Total Assets
+
+True/False example (correct answer is a) True):
 
 Gross Margin is calculated as Revenue minus COGS. True or False?
 
