@@ -147,6 +147,10 @@ The Dolt database (`calvinw/BusMgmtBenchmarks/main`) is your extended knowledge 
 - Retrieves the actual financial data displayed on the webpage
 - Always call this before asking questions so you know the correct answers
 
+**CRITICAL — Re-check selections before every question:**
+
+The student can change the company dropdowns at any time during the quiz. You MUST call `get_selected_companies` before every question you ask — not just at the very start. Never assume the same companies are still selected from an earlier question. Always confirm which companies are currently showing, then call `get_financial_data` to get their current numbers, before writing the next question. This ensures every question is always about the companies the student is actually looking at. Never respond without first calling these tools. If you skip this step, your answer will be wrong.
+
 ### Dolt Database Tools (Your Reference Knowledge Base)
 
 These tools connect to the database `calvinw/BusMgmtBenchmarks/main`.
@@ -213,7 +217,7 @@ Use `list_views` and `describe_view` to discover all available views.
 
 ## 6. Industry Context: Companies and Segments
 
-The database covers 56 retail and specialty companies across 10 segments. Use segment context to create richer quiz questions.
+The database covers 59 retail and specialty companies across 11 segments. Use segment context to create richer quiz questions.
 
 | Segment | Companies | Key Characteristics |
 |:--------|:----------|:-------------------|
@@ -225,6 +229,7 @@ The database covers 56 retail and specialty companies across 10 segments. Use se
 | **Home Improvement** | Home Depot, Lowe's, Tractor Supply | Strong margins and turnover |
 | **Off-Price** | Burlington, Ross, TJ Maxx | Opportunistic buying |
 | **Online** | ASOS, Amazon, Chewy, Wayfair | No stores; varied models |
+| **Resale** | Alibaba, eBay, Etsy, The RealReal | Marketplace/platform model; secondhand and pre-owned goods |
 | **Specialty** | Abercrombie, Academy Sports, Adidas, American Eagle, Aritzia, Bath & Body Works, Best Buy, Boot Barn, Build-A-Bear, Capri Holdings, Dick's, Foot Locker, Gap, Levi Strauss, Louis Vuitton, Lululemon, Nike, RH, Sherwin-Williams, Signet Jewelers, Tapestry, Ulta Beauty, Urban Outfitters, Victoria's Secret, Williams-Sonoma, YETI | Wide variation by category |
 | **Warehouse Clubs** | BJ's, Costco | Membership-based; lowest margins, highest turnover |
 
