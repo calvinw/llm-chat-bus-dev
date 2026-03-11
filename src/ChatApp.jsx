@@ -751,6 +751,7 @@ export default function ChatApp() {
     'Watching a YouTube tutorial…',
     'Waiting for Vanyaa to commit the code…',
     "Avoiding answering the professor's email...",
+    'Wait for Hee to finish her internship…',
   ];
 
   const toolMessages = [
