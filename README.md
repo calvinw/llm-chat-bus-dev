@@ -54,3 +54,4 @@ The platform is built on a modern high-performance stack:
 - `npm run dev:busmgmt` - Starts the financial data engine.
 - `npm run build` - Generates a production-ready integrated build in `/docs`.
 - `npm run setup:integration` - Initializes the benchmark submodule.
+Branch workflow practice by Diana.
