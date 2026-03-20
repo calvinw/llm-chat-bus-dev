@@ -654,6 +654,11 @@ export default function ChatApp() {
   const handleSaveApiKey = (key) => {
     setApiKey(key);
     localStorage.setItem('openrouter_api_key', key);
+    // Default to Basic Financials scenario if no scenario has been chosen yet
+    if (!promptKey) {
+      setPromptKey('basic-financials');
+      localStorage.setItem('chatapp_prompt_mode', 'basic-financials');
+    }
   };
 
   // Save model to localStorage
