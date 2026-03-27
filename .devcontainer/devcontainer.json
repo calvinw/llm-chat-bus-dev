@@ -6,7 +6,7 @@
       "version": "latest"
     }
   },
-  "postCreateCommand": "echo 'Run: bash start_servers.sh' && mkdir -p ~/.ssh && ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' 2>/dev/null || true && mkdir -p ~/.config/opencode && cp /etc/skel/.config/opencode/opencode.json ~/.config/opencode/opencode.json",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "portsAttributes": {
     "8081": {
       "label": "Chat App",
@@ -17,7 +17,24 @@
       "onAutoForward": "silent"
     }
   },
-  "remoteEnv": {
+  "containerEnv": {
     "CLAUDE_CODE_DISABLE_VSCODE_EXTENSION": "1"
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": []
+    },
+    "vscode": {
+      "extensions": [],
+      "settings": {
+        "extensions.allowed": {
+          "anthropic.claude-code": false,
+          "*": true
+        },
+        "chat.agent.enabled": false,
+        "terminal.integrated.copyOnSelection": true,
+        "terminal.integrated.rightClickBehavior": "paste"
+      }
+    }
   }
 }
