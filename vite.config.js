@@ -5,11 +5,13 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
 import fs from 'fs';
 
+const sharedBasicFinancials = fs.readFileSync('prompts/shared-basic-financials-common.md', 'utf-8');
+
 const systemPrompts = {
   advancedRoa: fs.readFileSync('prompts/advanced-roa-analysis.md', 'utf-8'),
   basicFinancials: fs.readFileSync('prompts/basic-financials.md', 'utf-8'),
-  quizBasicFinancials: fs.readFileSync('prompts/quiz-basic-financials.md', 'utf-8'),
-  quizRoaAnalysis: fs.readFileSync('prompts/quiz-roa-analysis.md', 'utf-8'),
+  quizBasicFinancials: sharedBasicFinancials + '\n\n' + fs.readFileSync('prompts/quiz-basic-financials.md', 'utf-8'),
+  quizRoaAnalysis: sharedBasicFinancials + '\n\n' + fs.readFileSync('prompts/quiz-roa-analysis.md', 'utf-8'),
 };
 
 export default defineConfig({
