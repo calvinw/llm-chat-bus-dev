@@ -757,6 +757,7 @@ export default function ChatApp() {
     'Waiting for Vanyaa to commit the code…',
     "Avoiding answering the professor's email...",
     'Wait for Hee to finish her internship…',
+    'Catie is waiting for holidays…',
   ];
 
   const toolMessages = [
