@@ -252,6 +252,7 @@ export default function ChatApp() {
   const [provisionedKey, setProvisionedKey] = useState(null);
   const [keyLoading, setKeyLoading] = useState(false);
   const [capReached, setCapReached] = useState(false);
+  const provisionedForUser = useRef(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -265,7 +266,15 @@ export default function ChatApp() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      provisionedForUser.current = null;
+      setProvisionedKey(null);
+      return;
+    }
+    // Prevent duplicate calls if auth fires multiple times for the same user
+    if (provisionedForUser.current === user.id) return;
+    provisionedForUser.current = user.id;
+
     setKeyLoading(true);
     supabase.functions.invoke('provision-key')
       .then(({ data }) => {
