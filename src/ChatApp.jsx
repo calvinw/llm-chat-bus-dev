@@ -870,6 +870,7 @@ export default function ChatApp() {
     "Avoiding answering the professor's email...",
     'Wait for Hee to finish her internship…',
     'Catie is waiting for holidays…',
+    'Waiting for Jessie to join the chat…',
   ];
 
   const toolMessages = [
