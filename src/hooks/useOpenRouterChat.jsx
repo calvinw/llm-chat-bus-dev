@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react';
  * Supports tool calling with AI Elements compatible parts structure
  * Supports unlimited tool call chaining and parallel tool execution
  */
-export function useOpenRouterChat(initialMessages = [], tools = null, toolHandlers = null) {
+export function useOpenRouterChat(initialMessages = [], tools = null, toolHandlers = null, apiKey = null) {
   const [messages, setMessages] = useState(initialMessages);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
@@ -83,7 +83,6 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
   const sendMessage = useCallback(async (content, options = {}) => {
     const { model = 'google/gemini-3-flash-preview', systemPrompt } = options;
 
-    const apiKey = localStorage.getItem('openrouter_api_key');
     if (!apiKey) {
       setError(new Error('Please enter your OpenRouter API key in settings'));
       return;
@@ -348,7 +347,7 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
 
       setTimeout(() => setStatus('idle'), 3000);
     }
-  }, [messages, tools, toolHandlers, executeTool, toolCallsToParts]);
+  }, [messages, tools, toolHandlers, apiKey, executeTool, toolCallsToParts]);
 
   /**
    * Clear all messages

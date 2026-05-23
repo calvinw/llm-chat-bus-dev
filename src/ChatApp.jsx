@@ -249,6 +249,9 @@ export default function ChatApp() {
   // Auth state — null means we're still checking, false means not logged in
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [provisionedKey, setProvisionedKey] = useState(null);
+  const [keyLoading, setKeyLoading] = useState(false);
+  const [capReached, setCapReached] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -260,6 +263,23 @@ export default function ChatApp() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setKeyLoading(true);
+    supabase.functions.invoke('provision-key')
+      .then(({ data }) => {
+        if (data?.key) {
+          setProvisionedKey(data.key);
+          // Set a default scenario if none has been chosen yet, so the chat input is enabled
+          if (!localStorage.getItem('chatapp_prompt_mode')) {
+            setPromptKey('basic-financials');
+            localStorage.setItem('chatapp_prompt_mode', 'basic-financials');
+          }
+        }
+      })
+      .finally(() => setKeyLoading(false));
+  }, [user]);
 
   const handleGoogleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
@@ -279,7 +299,7 @@ export default function ChatApp() {
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
-  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(() => !localStorage.getItem('openrouter_api_key'));
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
   const [toolDisplayMode, setToolDisplayMode] = useState(() => localStorage.getItem('chatapp_tool_display') || 'none');
@@ -663,12 +683,20 @@ export default function ChatApp() {
   const mergedTools = [...localTools, ...mcpTools];
   const mergedToolHandlers = { ...toolHandlers, ...mcpToolHandlers };
 
+  // Provisioned key takes precedence over any manually stored key
+  const effectiveApiKey = provisionedKey || apiKey;
+
   // Use the OpenRouter chat hook with welcome message and merged tools
-  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
+  const { messages, status, sendMessage, clearMessages, isLoading, error: chatError } = useOpenRouterChat(
     [],
     mergedTools,
-    mergedToolHandlers
+    mergedToolHandlers,
+    effectiveApiKey
   );
+
+  useEffect(() => {
+    if (chatError?.message?.includes('429')) setCapReached(true);
+  }, [chatError]);
 
   // Fetch models from OpenRouter API
   const { models, loading: modelsLoading } = useModelManager(apiKey);
@@ -741,7 +769,7 @@ export default function ChatApp() {
     : mcpConnectionStatus === 'error'
     ? 'border-red-600 text-red-600'
     : 'border-yellow-600 text-yellow-600';
-  const apiKeyStatusClassName = apiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+  const apiKeyStatusClassName = effectiveApiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
   const mcpStatusLabel = mcpConnectionStatus ?? 'not connected';
   const mcpBadgeClassName = mcpConnectionStatus ? mcpStatusClassName : 'border-red-600 text-red-600';
   const iframeStatusClassName = shouldRenderIframe ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
@@ -811,10 +839,29 @@ export default function ChatApp() {
     ? toolMessages[thinkingIndex % toolMessages.length]
     : thinkingMessages[thinkingIndex % thinkingMessages.length];
 
-  if (authLoading) {
+  if (authLoading || keyLoading) {
     return (
       <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
-        <div style={{ color: '#94a3b8', fontSize: '1rem' }}>Loading...</div>
+        <div style={{ color: '#94a3b8', fontSize: '1rem' }}>{keyLoading ? 'Setting up your account…' : 'Loading...'}</div>
+      </div>
+    );
+  }
+
+  if (capReached) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2.5rem', background: '#1e293b', borderRadius: '1rem', boxShadow: '0 4px 32px rgba(0,0,0,0.4)', maxWidth: '420px', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f1f5f9' }}>Monthly Limit Reached</div>
+          <div style={{ fontSize: '0.95rem', color: '#94a3b8' }}>
+            You've reached your $0.50 monthly usage limit. Check back next month, or add your own OpenRouter key in Settings to keep going now.
+          </div>
+          <button
+            onClick={() => { setCapReached(false); setApiKeyDialogOpen(true); }}
+            style={{ padding: '0.6rem 1.25rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '0.5rem', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Enter My Own Key
+          </button>
+        </div>
       </div>
     );
   }
