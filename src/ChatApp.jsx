@@ -271,7 +271,7 @@ export default function ChatApp() {
       setProvisionedKey(null);
       return;
     }
-    // Prevent duplicate calls if auth fires multiple times for the same user
+    // Prevent duplicate calls within the same page load
     if (provisionedForUser.current === user.id) return;
     provisionedForUser.current = user.id;
 
