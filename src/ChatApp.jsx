@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { supabase } from '@/utils/supabaseClient';
 import {
   Conversation,
   ConversationContent,
@@ -245,6 +246,61 @@ const SUGGESTED_PROMPTS_BY_MODE = {
 
 
 export default function ChatApp() {
+  // Auth state — null means we're still checking, false means not logged in
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [provisionedKey, setProvisionedKey] = useState(null);
+  const [keyLoading, setKeyLoading] = useState(false);
+  const [capReached, setCapReached] = useState(false);
+  const provisionedForUser = useRef(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? false);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      provisionedForUser.current = null;
+      setProvisionedKey(null);
+      return;
+    }
+    // Prevent duplicate calls within the same page load
+    if (provisionedForUser.current === user.id) return;
+    provisionedForUser.current = user.id;
+
+    setKeyLoading(true);
+    supabase.functions.invoke('provision-key')
+      .then(({ data }) => {
+        if (data?.key) {
+          setProvisionedKey(data.key);
+          // Set a default scenario if none has been chosen yet, so the chat input is enabled
+          if (!localStorage.getItem('chatapp_prompt_mode')) {
+            setPromptKey('basic-financials');
+            localStorage.setItem('chatapp_prompt_mode', 'basic-financials');
+          }
+        }
+      })
+      .finally(() => setKeyLoading(false));
+  }, [user]);
+
+  const handleGoogleSignIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    });
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   const initialIframeConfig = resolveIframeSource(
     translateStoredIframeSrc(localStorage.getItem('chatapp_iframe_src')) || DEFAULT_IFRAME_SRC
   );
@@ -252,7 +308,7 @@ export default function ChatApp() {
   // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('openrouter_api_key') || '');
-  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(() => !localStorage.getItem('openrouter_api_key'));
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [iframeConfigWarning, setIframeConfigWarning] = useState(initialIframeConfig.warning);
   const [toolDisplayMode, setToolDisplayMode] = useState(() => localStorage.getItem('chatapp_tool_display') || 'none');
@@ -636,12 +692,20 @@ export default function ChatApp() {
   const mergedTools = [...localTools, ...mcpTools];
   const mergedToolHandlers = { ...toolHandlers, ...mcpToolHandlers };
 
+  // Provisioned key takes precedence over any manually stored key
+  const effectiveApiKey = provisionedKey || apiKey;
+
   // Use the OpenRouter chat hook with welcome message and merged tools
-  const { messages, status, sendMessage, clearMessages, isLoading } = useOpenRouterChat(
+  const { messages, status, sendMessage, clearMessages, isLoading, error: chatError } = useOpenRouterChat(
     [],
     mergedTools,
-    mergedToolHandlers
+    mergedToolHandlers,
+    effectiveApiKey
   );
+
+  useEffect(() => {
+    if (chatError?.message?.includes('429')) setCapReached(true);
+  }, [chatError]);
 
   // Fetch models from OpenRouter API
   const { models, loading: modelsLoading } = useModelManager(apiKey);
@@ -714,7 +778,7 @@ export default function ChatApp() {
     : mcpConnectionStatus === 'error'
     ? 'border-red-600 text-red-600'
     : 'border-yellow-600 text-yellow-600';
-  const apiKeyStatusClassName = apiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+  const apiKeyStatusClassName = effectiveApiKey ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
   const mcpStatusLabel = mcpConnectionStatus ?? 'not connected';
   const mcpBadgeClassName = mcpConnectionStatus ? mcpStatusClassName : 'border-red-600 text-red-600';
   const iframeStatusClassName = shouldRenderIframe ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
@@ -784,6 +848,51 @@ export default function ChatApp() {
     ? toolMessages[thinkingIndex % toolMessages.length]
     : thinkingMessages[thinkingIndex % thinkingMessages.length];
 
+  if (authLoading || keyLoading) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+        <div style={{ color: '#94a3b8', fontSize: '1rem' }}>{keyLoading ? 'Setting up your account…' : 'Loading...'}</div>
+      </div>
+    );
+  }
+
+  if (capReached) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2.5rem', background: '#1e293b', borderRadius: '1rem', boxShadow: '0 4px 32px rgba(0,0,0,0.4)', maxWidth: '420px', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f1f5f9' }}>Monthly Limit Reached</div>
+          <div style={{ fontSize: '0.95rem', color: '#94a3b8' }}>
+            You've reached your $0.50 monthly usage limit. Check back next month, or add your own OpenRouter key in Settings to keep going now.
+          </div>
+          <button
+            onClick={() => { setCapReached(false); setApiKeyDialogOpen(true); }}
+            style={{ padding: '0.6rem 1.25rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '0.5rem', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Enter My Own Key
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', padding: '2.5rem', background: '#1e293b', borderRadius: '1rem', boxShadow: '0 4px 32px rgba(0,0,0,0.4)', minWidth: '320px' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f1f5f9' }}>FIT Retail Index Chat</div>
+          <div style={{ fontSize: '0.95rem', color: '#94a3b8', textAlign: 'center' }}>Sign in to access the financial comparison assistant.</div>
+          <button
+            onClick={handleGoogleSignIn}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', background: '#fff', color: '#1e293b', border: 'none', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', width: '100%', justifyContent: 'center' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.58-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Group orientation="horizontal" style={{ width: '100%', height: '100%' }}>
@@ -844,6 +953,9 @@ export default function ChatApp() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} title={user?.email}>
+                Sign out
+              </Button>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm">
