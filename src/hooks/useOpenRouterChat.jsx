@@ -357,12 +357,21 @@ export function useOpenRouterChat(initialMessages = [], tools = null, toolHandle
     setError(null);
   }, []);
 
+  /**
+   * Load a saved set of messages (e.g. from a past conversation)
+   */
+  const loadMessages = useCallback((msgs) => {
+    setMessages(msgs);
+    setError(null);
+  }, []);
+
   return {
     messages,
     status,
     error,
     sendMessage,
     clearMessages,
+    loadMessages,
     isLoading: status === 'streaming' || status === 'executing_tools',
   };
 }

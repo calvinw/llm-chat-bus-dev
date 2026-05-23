@@ -40,8 +40,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon, Trash2 } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon, Trash2, History } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
+import { useConversations } from '@/hooks/useConversations';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
 import { SYSTEM_PROMPTS, DEFAULT_PROMPT_KEY, SYSTEM_PROMPT } from '@/utils/systemPrompt';
@@ -696,12 +697,35 @@ export default function ChatApp() {
   const effectiveApiKey = provisionedKey || apiKey;
 
   // Use the OpenRouter chat hook with welcome message and merged tools
-  const { messages, status, sendMessage, clearMessages, isLoading, error: chatError } = useOpenRouterChat(
+  const { messages, status, sendMessage, clearMessages, loadMessages, isLoading, error: chatError } = useOpenRouterChat(
     [],
     mergedTools,
     mergedToolHandlers,
     effectiveApiKey
   );
+
+  const {
+    conversations,
+    currentConversationId,
+    setCurrentConversationId,
+    loadingHistory,
+    loadConversations,
+    saveConversation,
+    loadConversationMessages,
+  } = useConversations(user);
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const prevStatusRef = useRef('idle');
+
+  useEffect(() => {
+    const wasActive = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'executing_tools';
+    prevStatusRef.current = status;
+    if (wasActive && status === 'idle' && messages.length > 0) {
+      saveConversation(messages, currentConversationId).then(id => {
+        if (id && id !== currentConversationId) setCurrentConversationId(id);
+      });
+    }
+  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (chatError?.message?.includes('429')) setCapReached(true);
@@ -742,9 +766,20 @@ export default function ChatApp() {
     await sendMessage(prompt, { model: selectedModel, systemPrompt: activeSystemPrompt });
   };
 
-  // Clear conversation
+  // Clear conversation and start fresh
   const handleClearConversation = () => {
     clearMessages();
+    setCurrentConversationId(null);
+  };
+
+  // Load a past conversation from history
+  const handleLoadConversation = async (id) => {
+    const msgs = await loadConversationMessages(id);
+    if (msgs) {
+      loadMessages(msgs);
+      setCurrentConversationId(id);
+      setHistoryOpen(false);
+    }
   };
 
   // Export conversation as markdown (detailed)
@@ -953,16 +988,84 @@ export default function ChatApp() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} title={user?.email}>
-                Sign out
-              </Button>
+              <Sheet open={historyOpen} onOpenChange={(open) => { setHistoryOpen(open); if (open) loadConversations(); }}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <History className="size-4 mr-2" />
+                    History
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80 flex flex-col p-0">
+                  <SheetHeader className="px-6 py-4 border-b">
+                    <SheetTitle>Chat History</SheetTitle>
+                  </SheetHeader>
+                  <div className="px-4 pt-4">
+                    <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { handleClearConversation(); setHistoryOpen(false); }}>
+                      <RotateCcw className="size-4 mr-2" />
+                      New Chat
+                    </Button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                    {loadingHistory ? (
+                      <p className="text-sm text-muted-foreground text-center pt-4">Loading…</p>
+                    ) : conversations.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center pt-4">No saved chats yet.</p>
+                    ) : (
+                      (() => {
+                        const now = new Date();
+                        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        const startOfYesterday = new Date(startOfToday - 86400000);
+                        const startOfLastWeek = new Date(startOfToday - 7 * 86400000);
+                        const groups = [
+                          { label: 'Today', items: conversations.filter(c => new Date(c.updated_at) >= startOfToday) },
+                          { label: 'Yesterday', items: conversations.filter(c => new Date(c.updated_at) >= startOfYesterday && new Date(c.updated_at) < startOfToday) },
+                          { label: 'Last Week', items: conversations.filter(c => new Date(c.updated_at) >= startOfLastWeek && new Date(c.updated_at) < startOfYesterday) },
+                          { label: 'Older', items: conversations.filter(c => new Date(c.updated_at) < startOfLastWeek) },
+                        ].filter(g => g.items.length > 0);
+                        return groups.map(group => (
+                          <div key={group.label}>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{group.label}</p>
+                            <div className="space-y-1">
+                              {group.items.map(conv => (
+                                <button
+                                  key={conv.id}
+                                  onClick={() => handleLoadConversation(conv.id)}
+                                  className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors flex items-center justify-between gap-2 ${conv.id === currentConversationId ? 'bg-muted font-medium' : ''}`}
+                                >
+                                  <span className="truncate">{conv.title}</span>
+                                  <span className="text-xs text-muted-foreground shrink-0">
+                                    {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ));
+                      })()
+                    )}
+                  </div>
+                  <div className="border-t px-4 py-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold shrink-0">
+                        {(user?.user_metadata?.full_name || user?.email || '?').slice(0, 2).toUpperCase()}
+                      </div>
+                      <span className="text-sm truncate">{user?.user_metadata?.full_name || user?.email}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
+                      Sign out
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
               <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+                {/* Settings button hidden — uncomment to restore
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Settings className="size-4 mr-2" />
                     Settings
                   </Button>
                 </SheetTrigger>
+                */}
                 <SheetContent side="right" className="w-80 overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Settings</SheetTitle>
