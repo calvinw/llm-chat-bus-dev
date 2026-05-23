@@ -766,6 +766,19 @@ export default function ChatApp() {
     await sendMessage(prompt, { model: selectedModel, systemPrompt: activeSystemPrompt });
   };
 
+  // Inject CSS into the iframe to hide the hamburger menu button (same-origin only — works in production)
+  const handleIframeLoad = useCallback(() => {
+    try {
+      const doc = iframeRef.current?.contentWindow?.document;
+      if (!doc) return;
+      const style = doc.createElement('style');
+      style.textContent = 'button[aria-label="Open menu"] { display: none !important; }';
+      doc.head.appendChild(style);
+    } catch (e) {
+      // Cross-origin in dev — silently ignore
+    }
+  }, []);
+
   // Clear conversation and start fresh
   const handleClearConversation = () => {
     clearMessages();
@@ -941,6 +954,7 @@ export default function ChatApp() {
                 className="w-full h-full border-0"
                 title="Side Panel"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+                onLoad={handleIframeLoad}
               />
             </div>
           )}
