@@ -808,8 +808,10 @@ export default function ChatApp() {
       const style = doc.createElement('style');
       style.textContent = [
         'button[aria-label="Open menu"] { display: none !important; }',
-        'div:has(> button.bg-green-600) { display: none !important; }',
-        'div:has(> div > img[alt="FIT Retail Index Report"]) { display: none !important; }',
+        '@media (max-width: 767px) {',
+        '  div:has(> button.bg-green-600) { display: none !important; }',
+        '  div:has(> div > img[alt="FIT Retail Index Report"]) { display: none !important; }',
+        '}',
       ].join('\n');
       doc.head.appendChild(style);
     } catch (e) {
@@ -995,8 +997,12 @@ export default function ChatApp() {
     <div style={{ height: '100%' }} className="flex flex-col">
           {/* Header */}
           <header className="flex items-center justify-between border-b px-6 py-4">
-            <div className="flex items-center gap-2">
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-2">
+                <MessageSquare className="size-5" />
+                <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
