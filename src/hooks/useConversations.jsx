@@ -48,6 +48,24 @@ export function useConversations(user) {
     return data?.messages ?? null;
   }, []);
 
+  const renameConversation = useCallback(async (id, newTitle) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+    await supabase
+      .from('conversations')
+      .update({ title: trimmed })
+      .eq('id', id);
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, title: trimmed } : c));
+  }, []);
+
+  const deleteConversation = useCallback(async (id) => {
+    await supabase
+      .from('conversations')
+      .delete()
+      .eq('id', id);
+    setConversations(prev => prev.filter(c => c.id !== id));
+  }, []);
+
   return {
     conversations,
     currentConversationId,
@@ -56,5 +74,7 @@ export function useConversations(user) {
     loadConversations,
     saveConversation,
     loadConversationMessages,
+    renameConversation,
+    deleteConversation,
   };
 }

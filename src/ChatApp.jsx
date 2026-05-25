@@ -40,7 +40,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon, Trash2, History } from 'lucide-react';
+import { MessageSquare, RotateCcw, Settings, ExternalLink, Download, FileDown, Printer, WrenchIcon, CheckCircleIcon, XCircleIcon, Trash2, History, Pencil, Check, X } from 'lucide-react';
 import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useConversations } from '@/hooks/useConversations';
 import { useModelManager } from '@/hooks/useModelManager';
@@ -752,9 +752,13 @@ export default function ChatApp() {
     loadConversations,
     saveConversation,
     loadConversationMessages,
+    renameConversation,
+    deleteConversation,
   } = useConversations(user);
 
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
   const prevStatusRef = useRef('idle');
 
   useEffect(() => {
@@ -1045,12 +1049,12 @@ export default function ChatApp() {
                 <SheetTrigger asChild>
                   <Button variant="ghost" size={isMobile ? 'icon' : 'sm'}>
                     <History className="size-4" />
-                    {!isMobile && <span className="ml-2">History</span>}
+                    {!isMobile && <span className="ml-2">Chats</span>}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80 flex flex-col p-0">
                   <SheetHeader className="px-6 py-4 border-b">
-                    <SheetTitle>Chat History</SheetTitle>
+                    <SheetTitle>Chats</SheetTitle>
                   </SheetHeader>
                   <div className="px-4 pt-4">
                     <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { handleClearConversation(); setHistoryOpen(false); }}>
@@ -1080,16 +1084,38 @@ export default function ChatApp() {
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{group.label}</p>
                             <div className="space-y-1">
                               {group.items.map(conv => (
-                                <button
+                                <div
                                   key={conv.id}
-                                  onClick={() => handleLoadConversation(conv.id)}
-                                  className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors flex items-center justify-between gap-2 ${conv.id === currentConversationId ? 'bg-muted font-medium' : ''}`}
+                                  className={`w-full px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 group/conv ${conv.id === currentConversationId ? 'bg-muted font-medium' : 'hover:bg-muted'}`}
                                 >
-                                  <span className="truncate">{conv.title}</span>
-                                  <span className="text-xs text-muted-foreground shrink-0">
-                                    {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </button>
+                                  {renamingId === conv.id ? (
+                                    <>
+                                      <input
+                                        autoFocus
+                                        className="flex-1 min-w-0 bg-background border border-border rounded px-1.5 py-0.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+                                        value={renameValue}
+                                        onChange={e => setRenameValue(e.target.value)}
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') { renameConversation(conv.id, renameValue); setRenamingId(null); }
+                                          if (e.key === 'Escape') setRenamingId(null);
+                                        }}
+                                      />
+                                      <button onClick={() => { renameConversation(conv.id, renameValue); setRenamingId(null); }} className="shrink-0 text-muted-foreground hover:text-foreground"><Check className="size-3.5" /></button>
+                                      <button onClick={() => setRenamingId(null)} className="shrink-0 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button className="flex-1 min-w-0 text-left" onClick={() => handleLoadConversation(conv.id)}>
+                                        <span className="truncate block">{conv.title}</span>
+                                      </button>
+                                      <span className="text-xs text-muted-foreground shrink-0 group-hover/conv:hidden">
+                                        {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                      <button onClick={() => { setRenamingId(conv.id); setRenameValue(conv.title); }} className="shrink-0 hidden group-hover/conv:block text-muted-foreground hover:text-foreground"><Pencil className="size-3.5" /></button>
+                                      <button onClick={() => { if (conv.id === currentConversationId) setCurrentConversationId(null); deleteConversation(conv.id); }} className="shrink-0 hidden group-hover/conv:block text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /></button>
+                                    </>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           </div>
