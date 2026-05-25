@@ -1464,7 +1464,7 @@ export default function ChatApp() {
           </div>
 
           {/* Input Area */}
-          <div className={`border-t ${isMobile ? 'p-2' : 'p-4'}`}>
+          <div className={`border-t ${isMobile ? 'p-2' : 'p-4'}`} style={isMobile ? { paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' } : {}}>
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
                 <PromptInputTextarea
@@ -1535,7 +1535,7 @@ export default function ChatApp() {
 
   if (isMobile) {
     return (
-      <div ref={mobileContainerRef} style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div ref={mobileContainerRef} style={{ width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {shouldRenderIframe && (
           <div style={{ flex: `0 0 ${mobileTopPct}%`, overflow: 'hidden' }}>
             {iframeEl}
