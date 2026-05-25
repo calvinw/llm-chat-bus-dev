@@ -808,6 +808,7 @@ export default function ChatApp() {
       const style = doc.createElement('style');
       style.textContent = [
         'button[aria-label="Open menu"] { display: none !important; }',
+        'main { padding-top: 1rem !important; }',
         'div:has(> button.bg-green-600) { display: none !important; }',
         '@media (max-width: 767px) {',
         '  div:has(> div > img[alt="FIT Retail Index Report"]) { display: none !important; }',
