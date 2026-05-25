@@ -352,6 +352,7 @@ export default function ChatApp() {
   }, []);
 
   const [mobileTopPct, setMobileTopPct] = useState(40);
+  const [isDraggingDivider, setIsDraggingDivider] = useState(false);
   const mobileContainerRef = useRef(null);
 
   const handleMobileDrag = useCallback((e) => {
@@ -359,22 +360,27 @@ export default function ChatApp() {
     const startY = e.touches ? e.touches[0].clientY : e.clientY;
     const containerHeight = mobileContainerRef.current?.getBoundingClientRect().height ?? window.innerHeight;
     const startPct = mobileTopPct;
+    setIsDraggingDivider(true);
 
     const onMove = (ev) => {
+      ev.preventDefault();
       const currentY = ev.touches ? ev.touches[0].clientY : ev.clientY;
       const newPct = Math.min(75, Math.max(15, startPct + ((currentY - startY) / containerHeight) * 100));
       setMobileTopPct(newPct);
     };
     const onEnd = () => {
+      setIsDraggingDivider(false);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('mouseup', onEnd);
       document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('mouseup', onEnd);
     document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
   }, [mobileTopPct]);
 
   const getIframeTargetOrigin = useCallback(() => {
@@ -1368,10 +1374,10 @@ export default function ChatApp() {
                 {messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-center">
                     <div className="max-w-lg space-y-4">
-                      <MessageSquare className="mx-auto size-12 text-muted-foreground" />
+                      {!isMobile && <MessageSquare className="mx-auto size-12 text-muted-foreground" />}
                       {scenarioChosen ? (
                         <>
-                          <h2 className="text-lg font-semibold">{SYSTEM_PROMPTS[promptKey]?.label}</h2>
+                          {!isMobile && <h2 className="text-lg font-semibold">{SYSTEM_PROMPTS[promptKey]?.label}</h2>}
                           <p className="text-sm text-muted-foreground">
                             {SYSTEM_PROMPTS[promptKey]?.description}
                           </p>
@@ -1390,7 +1396,7 @@ export default function ChatApp() {
                         </>
                       ) : (
                         <>
-                          <h2 className="text-lg font-semibold">Start by choosing a scenario for the assistant</h2>
+                          {!isMobile && <h2 className="text-lg font-semibold">Start by choosing a scenario for the assistant</h2>}
                           <p className="text-sm text-muted-foreground">
                             Use the "Choose Scenario" dropdown above to select a mode
                           </p>
@@ -1537,8 +1543,11 @@ export default function ChatApp() {
     return (
       <div ref={mobileContainerRef} style={{ width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {shouldRenderIframe && (
-          <div style={{ flex: `0 0 ${mobileTopPct}%`, overflow: 'hidden' }}>
+          <div style={{ flex: `0 0 ${mobileTopPct}%`, overflow: 'hidden', position: 'relative' }}>
             {iframeEl}
+            {isDraggingDivider && (
+              <div style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'row-resize' }} />
+            )}
           </div>
         )}
         {shouldRenderIframe && (
