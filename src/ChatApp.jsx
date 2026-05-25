@@ -1470,7 +1470,6 @@ export default function ChatApp() {
                 <PromptInputTextarea
                   placeholder={scenarioChosen ? "Type your message..." : "Choose a scenario to start..."}
                   disabled={!scenarioChosen}
-                  className={isMobile ? 'min-h-10' : ''}
                 />
               </PromptInputBody>
               <PromptInputFooter>
