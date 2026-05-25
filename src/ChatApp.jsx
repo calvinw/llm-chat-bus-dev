@@ -343,6 +343,40 @@ export default function ChatApp() {
 
   const shouldRenderIframe = Boolean(iframeSrc);
 
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const [mobileTopPct, setMobileTopPct] = useState(40);
+  const mobileContainerRef = useRef(null);
+
+  const handleMobileDrag = useCallback((e) => {
+    e.preventDefault();
+    const startY = e.touches ? e.touches[0].clientY : e.clientY;
+    const containerHeight = mobileContainerRef.current?.getBoundingClientRect().height ?? window.innerHeight;
+    const startPct = mobileTopPct;
+
+    const onMove = (ev) => {
+      const currentY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const newPct = Math.min(75, Math.max(15, startPct + ((currentY - startY) / containerHeight) * 100));
+      setMobileTopPct(newPct);
+    };
+    const onEnd = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchend', onEnd);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+  }, [mobileTopPct]);
+
   const getIframeTargetOrigin = useCallback(() => {
     try {
       const frameUrl = new URL(iframeSrc, window.location.href);
@@ -772,7 +806,11 @@ export default function ChatApp() {
       const doc = iframeRef.current?.contentWindow?.document;
       if (!doc) return;
       const style = doc.createElement('style');
-      style.textContent = 'button[aria-label="Open menu"] { display: none !important; }';
+      style.textContent = [
+        'button[aria-label="Open menu"] { display: none !important; }',
+        'div:has(> button.bg-green-600) { display: none !important; }',
+        'div:has(> div > img[alt="FIT Retail Index Report"]) { display: none !important; }',
+      ].join('\n');
       doc.head.appendChild(style);
     } catch (e) {
       // Cross-origin in dev — silently ignore
@@ -942,35 +980,22 @@ export default function ChatApp() {
     );
   }
 
-  return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      <Group orientation="horizontal" style={{ width: '100%', height: '100%' }}>
-        {/* Iframe Panel */}
-        <Panel defaultSize={shouldRenderIframe ? 50 : 0} minSize={shouldRenderIframe ? 20 : 0}>
-          {shouldRenderIframe && (
-            <div style={{ height: '100%' }}>
-              <iframe
-                ref={iframeRef}
-                src={iframeSrc}
-                className="w-full h-full border-0"
-                title="Side Panel"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
-                onLoad={handleIframeLoad}
-              />
-            </div>
-          )}
-        </Panel>
+  const iframeEl = shouldRenderIframe ? (
+    <iframe
+      ref={iframeRef}
+      src={iframeSrc}
+      className="w-full h-full border-0"
+      title="Side Panel"
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+      onLoad={handleIframeLoad}
+    />
+  ) : null;
 
-        <Separator className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
-
-        {/* Main Chat Panel */}
-        <Panel defaultSize={shouldRenderIframe ? 50 : 100} minSize={20}>
-        <div style={{ height: '100%' }} className="flex flex-col">
+  const chatContent = (
+    <div style={{ height: '100%' }} className="flex flex-col">
           {/* Header */}
           <header className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-2">
-              <MessageSquare className="size-5" />
-              <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -1451,9 +1476,10 @@ export default function ChatApp() {
             </PromptInput>
           </div>
         </div>
-      </Panel>
-      </Group>
+  );
 
+  const dialogsContent = (
+    <>
       {/* API Key Dialog - shown on startup if no key is set */}
       <Dialog open={apiKeyDialogOpen} onOpenChange={setApiKeyDialogOpen}>
         <DialogContent>
@@ -1497,6 +1523,50 @@ export default function ChatApp() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <div ref={mobileContainerRef} style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {shouldRenderIframe && (
+          <div style={{ flex: `0 0 ${mobileTopPct}%`, overflow: 'hidden' }}>
+            {iframeEl}
+          </div>
+        )}
+        {shouldRenderIframe && (
+          <div
+            onMouseDown={handleMobileDrag}
+            onTouchStart={handleMobileDrag}
+            style={{ height: '12px', flexShrink: 0, background: 'var(--border)', cursor: 'row-resize', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--muted-foreground)', opacity: 0.4 }} />
+          </div>
+        )}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {chatContent}
+        </div>
+        {dialogsContent}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <Group orientation="horizontal" style={{ width: '100%', height: '100%' }}>
+        <Panel defaultSize={shouldRenderIframe ? 50 : 0} minSize={shouldRenderIframe ? 20 : 0}>
+          {shouldRenderIframe && (
+            <div style={{ height: '100%' }}>
+              {iframeEl}
+            </div>
+          )}
+        </Panel>
+        <Separator className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
+        <Panel defaultSize={shouldRenderIframe ? 50 : 100} minSize={20}>
+          {chatContent}
+        </Panel>
+      </Group>
+      {dialogsContent}
     </div>
   );
 }
