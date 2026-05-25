@@ -997,34 +997,34 @@ export default function ChatApp() {
   const chatContent = (
     <div style={{ height: '100%' }} className="flex flex-col">
           {/* Header */}
-          <header className="flex items-center justify-between border-b px-6 py-4">
+          <header className={`flex items-center border-b ${isMobile ? 'px-2 py-1 gap-1' : 'justify-between px-6 py-4'}`}>
             {!isMobile && (
               <div className="flex items-center gap-2">
                 <MessageSquare className="size-5" />
                 <h1 className="text-xl font-semibold">FIT Retail Index Chat</h1>
               </div>
             )}
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center ${isMobile ? 'gap-1 flex-1' : 'gap-2'}`}>
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? 'icon' : 'sm'}
                 onClick={handleClearConversation}
                 disabled={messages.length === 0}
               >
-                <RotateCcw className="size-4 mr-2" />
-                New Chat
+                <RotateCcw className="size-4" />
+                {!isMobile && <span className="ml-2">New Chat</span>}
               </Button>
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? 'icon' : 'sm'}
                 onClick={handleSavePdf}
                 disabled={messages.length === 0}
               >
-                <Printer className="size-4 mr-2" />
-                Save PDF
+                <Printer className="size-4" />
+                {!isMobile && <span className="ml-2">Save PDF</span>}
               </Button>
               <Select value={promptKey || ''} onValueChange={handlePromptModeChange}>
-                <SelectTrigger className="w-auto h-8 text-sm gap-1 px-3">
+                <SelectTrigger className={`h-8 gap-1 px-2 text-sm ${isMobile ? 'flex-1 min-w-0' : 'w-auto'}`}>
                   <SelectValue placeholder="Choose Scenario" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1037,9 +1037,9 @@ export default function ChatApp() {
               </Select>
               <Sheet open={historyOpen} onOpenChange={(open) => { setHistoryOpen(open); if (open) loadConversations(); }}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <History className="size-4 mr-2" />
-                    History
+                  <Button variant="ghost" size={isMobile ? 'icon' : 'sm'}>
+                    <History className="size-4" />
+                    {!isMobile && <span className="ml-2">History</span>}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80 flex flex-col p-0">
