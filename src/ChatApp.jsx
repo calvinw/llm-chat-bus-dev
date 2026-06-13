@@ -44,6 +44,7 @@ import { useOpenRouterChat } from '@/hooks/useOpenRouterChat';
 import { useModelManager } from '@/hooks/useModelManager';
 import useMCPManager from '@/hooks/useMCPManager';
 import { SYSTEM_PROMPTS, DEFAULT_PROMPT_KEY, SYSTEM_PROMPT } from '@/utils/systemPrompt';
+import { FlashcardDeck } from '@/components/ai-elements/flashcard-deck';
 import { exportConversationAsMarkdown, downloadMarkdown } from '@/utils/exportMarkdown';
 import { printConversationWithTable } from '@/utils/exportPdf';
 import {
@@ -1098,6 +1099,9 @@ export default function ChatApp() {
               </Sheet>
             </div>
           </header>
+
+          {/* Flashcard deck — only shown in flashcard scenario */}
+          {promptKey === 'flashcard-definitions' && <FlashcardDeck />}
 
           {/* Conversation Area */}
           <div className="flex-1 min-h-0 overflow-hidden">

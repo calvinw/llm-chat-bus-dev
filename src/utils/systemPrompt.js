@@ -30,6 +30,12 @@ export const SYSTEM_PROMPTS = {
     file: 'quiz-roa-analysis',
     prompt: SYSTEM_PROMPTS_RAW.quizRoaAnalysis,
   },
+  'flashcard-definitions': {
+    label: 'Flashcard: Definitions',
+    description: 'The assistant will quiz you on definitions and logical connections between financial concepts — no math, just meanings and relationships.',
+    file: 'flashcard-definitions',
+    prompt: SYSTEM_PROMPTS_RAW.flashcardDefinitions,
+  },
 };
 
 export const DEFAULT_PROMPT_KEY = 'advanced-roa';
