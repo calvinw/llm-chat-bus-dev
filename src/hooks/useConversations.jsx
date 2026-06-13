@@ -18,10 +18,10 @@ export function useConversations(user) {
     setLoadingHistory(false);
   }, [user]);
 
-  const saveConversation = useCallback(async (messages, conversationId) => {
+  const saveConversation = useCallback(async (messages, conversationId, titleOverride) => {
     if (!user || messages.length === 0) return conversationId;
     const firstUserMsg = messages.find(m => m.role === 'user');
-    const title = (firstUserMsg?.content || 'New Chat').slice(0, 60);
+    const title = titleOverride || (firstUserMsg?.content || 'New Chat').slice(0, 60);
 
     if (!conversationId) {
       const { data } = await supabase

@@ -765,9 +765,48 @@ export default function ChatApp() {
     const wasActive = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'executing_tools';
     prevStatusRef.current = status;
     if (wasActive && status === 'idle' && messages.length > 0) {
-      saveConversation(messages, currentConversationId).then(id => {
-        if (id && id !== currentConversationId) setCurrentConversationId(id);
-      });
+      (async () => {
+        let titleOverride;
+        if (!currentConversationId) {
+          const key = effectiveApiKey;
+          if (key) {
+            try {
+              const relevant = messages
+                .filter(m => m.role === 'user')
+                .slice(0, 10)
+                .map(m => ({ role: 'user', content: typeof m.content === 'string' ? m.content.slice(0, 300) : '' }));
+              const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${key}`,
+                  'HTTP-Referer': window.location.href,
+                  'X-Title': 'FIT Retail Index Chat',
+                },
+                body: JSON.stringify({
+                  model: 'openai/gpt-4o-mini',
+                  messages: [
+                    { role: 'system', content: 'Generate a very short title (5 words or fewer) summarizing this conversation. Respond with ONLY the title, no quotes, no punctuation, no extra text.' },
+                    ...relevant,
+                  ],
+                  stream: false,
+                  max_tokens: 20,
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                const t = data.choices?.[0]?.message?.content?.trim();
+                if (t) titleOverride = t.replace(/^["'\s]+|["'\s]+$/g, '').slice(0, 60);
+              }
+            } catch (e) {
+              console.warn('Title generation failed:', e);
+            }
+          }
+        }
+        saveConversation(messages, currentConversationId, titleOverride).then(id => {
+          if (id && id !== currentConversationId) setCurrentConversationId(id);
+        });
+      })();
     }
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
