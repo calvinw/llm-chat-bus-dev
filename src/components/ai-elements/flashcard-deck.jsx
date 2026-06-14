@@ -451,7 +451,7 @@ Rules:
                 : 'border-muted-foreground/30 text-muted-foreground hover:border-foreground hover:text-foreground'
             }`}
           >
-            Study cards
+            Definitions
           </button>
           <button
             onClick={() => !eqMode && toggleEqMode()}
