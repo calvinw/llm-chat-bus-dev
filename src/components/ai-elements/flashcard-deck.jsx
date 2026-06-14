@@ -8,40 +8,75 @@ import { FLASHCARDS } from '@/utils/flashcards';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
-// Muted tint only — all share the same glass base
-const DIFFICULTY_STYLES = {
-  easy:   {
-    active:   'bg-emerald-400/20 border-emerald-300/40 text-emerald-800 dark:text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.15)] backdrop-blur-sm',
-    inactive: 'bg-white/10 border-white/20 text-slate-500 dark:text-slate-400 hover:bg-white/20 backdrop-blur-sm',
-  },
-  medium: {
-    active:   'bg-amber-400/20 border-amber-300/40 text-amber-800 dark:text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.15)] backdrop-blur-sm',
-    inactive: 'bg-white/10 border-white/20 text-slate-500 dark:text-slate-400 hover:bg-white/20 backdrop-blur-sm',
-  },
-  hard:   {
-    active:   'bg-rose-400/20 border-rose-300/40 text-rose-800 dark:text-rose-300 shadow-[0_0_10px_rgba(251,113,133,0.15)] backdrop-blur-sm',
-    inactive: 'bg-white/10 border-white/20 text-slate-500 dark:text-slate-400 hover:bg-white/20 backdrop-blur-sm',
-  },
-};
+const DIFFICULTY_ACTIVE_TEXT = { easy: '#166534', medium: '#92400E', hard: '#9F1239' };
 
-// Very muted tints — just enough to differentiate categories
 const CATEGORY_COLORS = {
-  'Income Statement':       'bg-sky-300/10 border-sky-300/25 text-sky-700 dark:text-sky-300',
-  'Balance Sheet':          'bg-violet-300/10 border-violet-300/25 text-violet-700 dark:text-violet-300',
-  'Strategic Profit Model': 'bg-amber-300/10 border-amber-300/25 text-amber-700 dark:text-amber-300',
-  'Retail Metrics':         'bg-rose-300/10 border-rose-300/25 text-rose-700 dark:text-rose-300',
-  'Liquidity':              'bg-cyan-300/10 border-cyan-300/25 text-cyan-700 dark:text-cyan-300',
-  'Leverage':               'bg-orange-300/10 border-orange-300/25 text-orange-700 dark:text-orange-300',
-  'Advanced Financials':    'bg-indigo-300/10 border-indigo-300/25 text-indigo-700 dark:text-indigo-300',
+  'Income Statement':       'bg-sky-200/50 border-sky-300/50 text-sky-900',
+  'Balance Sheet':          'bg-purple-200/50 border-purple-300/50 text-purple-900',
+  'Strategic Profit Model': 'bg-amber-200/50 border-amber-300/50 text-amber-900',
+  'Retail Metrics':         'bg-rose-200/50 border-rose-300/50 text-rose-900',
+  'Liquidity':              'bg-teal-200/50 border-teal-300/50 text-teal-900',
+  'Leverage':               'bg-orange-200/50 border-orange-300/50 text-orange-900',
+  'Advanced Financials':    'bg-indigo-200/50 border-indigo-300/50 text-indigo-900',
 };
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
-// ── Shared glass style tokens ──────────────────────────────────────────────
+// ── Glass style tokens ─────────────────────────────────────────────────────
 
-const GLASS_CARD  = 'backdrop-blur-xl bg-white/15 dark:bg-white/8 border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.25)]';
-const GLASS_BTN   = 'bg-white/10 border-white/20 text-slate-600 dark:text-slate-300 hover:bg-white/22 backdrop-blur-sm transition-colors';
-const GLASS_ACTIVE = 'bg-white/25 border-white/40 text-slate-800 dark:text-white backdrop-blur-sm shadow-sm';
+const S = {
+  container: {
+    background: 'linear-gradient(145deg, #FFF8E7 0%, #FFE8A3 40%, #FCECC8 100%)',
+  },
+  card: {
+    background: 'rgba(255,255,255,0.35)',
+    backdropFilter: 'blur(28px)',
+    WebkitBackdropFilter: 'blur(28px)',
+    border: '1px solid rgba(255,255,255,0.6)',
+    borderRadius: '32px',
+    boxShadow: '0 8px 32px rgba(180,140,60,0.15), inset 0 1px 0 rgba(255,255,255,0.7)',
+  },
+  pillOn: {
+    background: 'rgba(255,255,255,0.7)',
+    border: '1px solid rgba(255,255,255,0.8)',
+    borderRadius: '999px',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    boxShadow: '0 2px 8px rgba(180,140,60,0.1)',
+  },
+  pillOff: {
+    background: 'transparent',
+    border: '1px solid rgba(200,160,60,0.2)',
+    borderRadius: '999px',
+  },
+  btn: {
+    background: 'rgba(255,255,255,0.5)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(200,160,60,0.3)',
+    borderRadius: '999px',
+  },
+  track: {
+    background: 'rgba(255,255,255,0.4)',
+    borderRadius: '999px',
+    height: '6px',
+    overflow: 'hidden',
+  },
+  fill: {
+    background: 'linear-gradient(90deg, #F59E0B, #D97706)',
+    height: '100%',
+    transition: 'width 0.3s ease',
+    borderRadius: '999px',
+  },
+};
+
+// Warm text color palette
+const C = {
+  heading: '#3D2C00',
+  body:    'rgba(80,60,0,0.85)',
+  muted:   'rgba(80,60,0,0.5)',
+  amber:   '#92400E',
+};
 
 // ── Equation utilities ─────────────────────────────────────────────────────
 
@@ -87,6 +122,18 @@ function normalizeAns(s) {
   return s.toLowerCase().replace(/[%()×÷+−=\-]/g, '').replace(/\s+/g, ' ').trim();
 }
 
+// ── Decorative amber blobs ────────────────────────────────────────────────
+
+function Orbs() {
+  return (
+    <>
+      <div aria-hidden style={{ position:'absolute', top:'-30px', right:'-20px', width:'160px', height:'160px', background:'rgba(251,191,36,0.22)', borderRadius:'50%', filter:'blur(48px)', pointerEvents:'none' }} />
+      <div aria-hidden style={{ position:'absolute', bottom:'-20px', left:'-20px', width:'120px', height:'120px', background:'rgba(245,158,11,0.18)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
+      <div aria-hidden style={{ position:'absolute', top:'45%', left:'35%', width:'90px', height:'90px', background:'rgba(252,211,77,0.13)', borderRadius:'50%', filter:'blur(36px)', pointerEvents:'none' }} />
+    </>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 
 export function FlashcardDeck({ onCardChange }) {
@@ -107,27 +154,20 @@ export function FlashcardDeck({ onCardChange }) {
   const [answerCorrect, setAnswerCorrect]   = useState(false);
   const [blankChoice, setBlankChoice]       = useState(0);
 
-  // ── Derived deck ────────────────────────────────────────────────────────
-
   const allCards     = useMemo(() => [...FLASHCARDS, ...generatedCards], [generatedCards]);
   const byDifficulty = useMemo(() => allCards.filter(c => c.difficulty === difficulty), [allCards, difficulty]);
-  const topics       = useMemo(() => {
-    const cats = [...new Set(byDifficulty.map(c => c.category))].sort();
-    return ['All', ...cats];
-  }, [byDifficulty]);
-  const deck = useMemo(() => {
+  const topics       = useMemo(() => ['All', ...[...new Set(byDifficulty.map(c => c.category))].sort()], [byDifficulty]);
+  const deck         = useMemo(() => {
     let cards = topic === 'All' ? byDifficulty : byDifficulty.filter(c => c.category === topic);
     if (eqMode) cards = cards.filter(c => !!getCardEquation(c));
     return cards;
   }, [byDifficulty, topic, eqMode]);
-  const savedCards = useMemo(() => allCards.filter(c => saved[c.id]), [allCards, saved]);
+  const savedCards   = useMemo(() => allCards.filter(c => saved[c.id]), [allCards, saved]);
 
   const card       = deck[index] ?? null;
   const total      = deck.length;
   const knownCount = deck.filter(c => known[c.id]).length;
   const studyCount = deck.filter(c => studying[c.id]).length;
-
-  // ── Equation derived ────────────────────────────────────────────────────
 
   const equation      = useMemo(() => eqMode && card ? getCardEquation(card) : null, [eqMode, card]);
   const eqTokens      = useMemo(() => equation ? tokenizeEq(equation) : [], [equation]);
@@ -135,10 +175,7 @@ export function FlashcardDeck({ onCardChange }) {
   const blankTokenIdx = blankIdxs[blankChoice % Math.max(blankIdxs.length, 1)];
   const correctAnswer = blankTokenIdx !== undefined ? eqTokens[blankTokenIdx].replace(/[()]/g, '').trim() : '';
 
-  // ── Effects ─────────────────────────────────────────────────────────────
-
   useEffect(() => { onCardChange?.(card); }, [card, onCardChange]);
-
   useEffect(() => {
     setUserAnswer(''); setAnswerChecked(false); setAnswerCorrect(false);
     const eq = eqMode && card ? getCardEquation(card) : null;
@@ -147,8 +184,6 @@ export function FlashcardDeck({ onCardChange }) {
       if (idxs.length > 0) setBlankChoice(Math.floor(Math.random() * idxs.length));
     }
   }, [card?.id, eqMode]);
-
-  // ── Callbacks ───────────────────────────────────────────────────────────
 
   const changeDifficulty = useCallback((d) => { setDifficulty(d); setTopic('All'); setFlipped(false); setIndex(0); }, []);
   const changeTopic      = useCallback((t) => { setTopic(t); setFlipped(false); setIndex(0); }, []);
@@ -191,8 +226,6 @@ export function FlashcardDeck({ onCardChange }) {
     setAnswerChecked(true);
   }, [userAnswer, correctAnswer]);
 
-  // ── AI generation ────────────────────────────────────────────────────────
-
   const handleGenerate = useCallback(async () => {
     const apiKey = localStorage.getItem('openrouter_api_key');
     if (!apiKey) { setGenerateMsg('No API key found. Add one in Settings first.'); return; }
@@ -218,7 +251,7 @@ export function FlashcardDeck({ onCardChange }) {
       catch { const m = content.match(/\{[\s\S]*\}/); if (!m) throw new Error('Could not read the AI response.'); parsed = JSON.parse(m[0]); }
       const timestamp = `${difficulty}-${Date.now()}`;
       const newCards  = (parsed.cards ?? [])
-        .map((c, i) => ({ id: `gen-${timestamp}-${i}`, front: (c.front ?? '').trim(), back: (c.back ?? '').trim(), category: VALID_CATEGORIES.includes(c.category) ? c.category : (topic === 'All' ? 'Advanced Financials' : topic), difficulty, generated: true }))
+        .map((c, i) => ({ id:`gen-${timestamp}-${i}`, front:(c.front??'').trim(), back:(c.back??'').trim(), category:VALID_CATEGORIES.includes(c.category)?c.category:(topic==='All'?'Advanced Financials':topic), difficulty, generated:true }))
         .filter(c => c.front && c.back);
       if (!newCards.length) throw new Error('No usable cards in the response. Try again.');
       setGeneratedCards(prev => [...prev, ...newCards]);
@@ -229,70 +262,72 @@ export function FlashcardDeck({ onCardChange }) {
     finally { setGenerating(false); }
   }, [difficulty, topic, deck.length]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  const categoryColor = card ? (CATEGORY_COLORS[card.category] ?? 'bg-white/10 border-white/20 text-slate-500') : '';
+  const categoryColor = card ? (CATEGORY_COLORS[card.category] ?? 'bg-amber-200/50 border-amber-300/50 text-amber-900') : '';
   const cardStatus    = card ? (known[card.id] ? 'known' : studying[card.id] ? 'studying' : null) : null;
   const isSaved       = card ? !!saved[card.id] : false;
 
-  // ── Shared container & orbs ──────────────────────────────────────────────
+  // Action button style variants
+  const btnStudying = { ...S.btn, background:'rgba(255,248,235,0.75)', border:'1px solid rgba(217,119,6,0.4)' };
+  const btnKnown    = { ...S.btn, background:'rgba(236,253,245,0.75)', border:'1px solid rgba(16,185,129,0.4)' };
+  const btnSaved    = { ...S.btn, background:'rgba(245,243,255,0.75)', border:'1px solid rgba(139,92,246,0.4)' };
 
-  const containerCls = 'relative flex flex-col gap-3 px-6 py-4 border-b select-none overflow-hidden bg-gradient-to-br from-slate-100/90 via-white/50 to-slate-200/70 dark:from-slate-900/90 dark:via-slate-800/50 dark:to-slate-950/70';
-
-  const Orbs = () => (
-    <>
-      <div aria-hidden className="pointer-events-none absolute -top-8 -right-8 size-36 rounded-full bg-violet-400/20 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-6 -left-6 size-28 rounded-full bg-cyan-400/15 blur-3xl" />
-    </>
-  );
+  // Equation blank slot styles
+  const blankSlotStyle = !answerChecked
+    ? { background:'rgba(255,255,255,0.4)', borderBottom:'2px solid rgba(200,160,60,0.5)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'rgba(80,60,0,0.3)', transition:'all 0.2s' }
+    : answerCorrect
+    ? { background:'rgba(209,250,229,0.6)', border:'2px solid rgba(16,185,129,0.5)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'#065F46' }
+    : { background:'rgba(254,226,226,0.6)', border:'2px solid rgba(239,68,68,0.45)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'#9F1239', textDecoration:'line-through' };
 
   // ── My List view ────────────────────────────────────────────────────────
 
   if (showMyList) {
     return (
-      <div className={containerCls}>
+      <div className="relative flex flex-col gap-3 px-6 py-4 border-b select-none overflow-hidden" style={S.container}>
         <Orbs />
+
         <div className="relative flex items-center justify-between">
           <button
             onClick={() => setShowMyList(false)}
-            className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border ${GLASS_BTN}`}
+            className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 transition-opacity hover:opacity-75"
+            style={{ ...S.btn, color: C.amber }}
           >
             <ArrowLeft className="size-3.5" />
             Back to flashcards
           </button>
-          <span className="text-xs text-slate-500 dark:text-slate-400">{savedCards.length} saved</span>
+          <span className="text-xs" style={{ color: C.muted }}>{savedCards.length} saved</span>
         </div>
 
-        <p className="relative text-sm font-semibold text-slate-700 dark:text-slate-200">My Vocab List</p>
+        <p className="relative text-sm font-semibold" style={{ color: C.heading }}>My Vocab List</p>
 
         {savedCards.length === 0 ? (
-          <div className={`relative flex items-center justify-center rounded-2xl border ${GLASS_CARD} py-10`}>
-            <p className="text-sm text-slate-500 dark:text-slate-400">No cards saved yet — hit "Save to my list" on any card!</p>
+          <div className="relative flex items-center justify-center py-10" style={S.card}>
+            <p className="text-sm" style={{ color: C.muted }}>No cards saved yet — hit "Save to my list" on any card!</p>
           </div>
         ) : (
           <div className="relative flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-1">
             {savedCards.map(c => (
-              <div key={c.id} className={`rounded-2xl border ${GLASS_CARD} p-4 flex flex-col gap-1.5`}>
+              <div key={c.id} className="p-4 flex flex-col gap-1.5" style={S.card}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">{c.front}</span>
-                    <Badge className={`text-xs ${CATEGORY_COLORS[c.category] ?? 'bg-white/10 border-white/20 text-slate-500'}`} variant="outline">
+                    <span className="font-semibold text-sm" style={{ color: C.heading }}>{c.front}</span>
+                    <Badge className={`text-xs ${CATEGORY_COLORS[c.category] ?? 'bg-amber-200/50 border-amber-300/50 text-amber-900'}`} variant="outline">
                       {c.category}
                     </Badge>
                     {c.generated && (
-                      <Badge className="text-xs bg-violet-300/15 border-violet-300/25 text-violet-700 dark:text-violet-300" variant="outline">
+                      <Badge className="text-xs bg-amber-200/50 border-amber-300/50 text-amber-900" variant="outline">
                         <Sparkles className="size-2.5 mr-1" />AI
                       </Badge>
                     )}
                   </div>
                   <button
                     onClick={() => handleRemoveFromList(c.id)}
-                    className="text-xs text-slate-400 hover:text-rose-500 transition-colors shrink-0"
+                    className="text-xs shrink-0 hover:text-rose-600 transition-colors"
+                    style={{ color: C.muted }}
                   >
                     Remove
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">{c.back}</p>
+                <p className="text-xs leading-relaxed whitespace-pre-line" style={{ color: C.body }}>{c.back}</p>
               </div>
             ))}
           </div>
@@ -304,35 +339,34 @@ export function FlashcardDeck({ onCardChange }) {
   // ── Main deck view ──────────────────────────────────────────────────────
 
   return (
-    <div className={containerCls}>
+    <div className="relative flex flex-col gap-3 px-6 py-4 border-b select-none overflow-hidden" style={S.container}>
       <Orbs />
 
       {/* ── Difficulty + My List ── */}
       <div className="relative flex items-center gap-2">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0">Difficulty:</span>
+        <span className="text-xs font-medium shrink-0" style={{ color: C.muted }}>Difficulty:</span>
         <div className="flex gap-1.5">
-          {Object.entries(DIFFICULTY_LABELS).map(([d, label]) => {
-            const s = DIFFICULTY_STYLES[d];
-            return (
-              <button
-                key={d}
-                onClick={() => changeDifficulty(d)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${difficulty === d ? s.active : s.inactive}`}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {Object.entries(DIFFICULTY_LABELS).map(([d, label]) => (
+            <button
+              key={d}
+              onClick={() => changeDifficulty(d)}
+              style={difficulty === d ? { ...S.pillOn, color: DIFFICULTY_ACTIVE_TEXT[d] } : { ...S.pillOff, color: C.muted }}
+              className="px-3 py-1 text-xs font-semibold transition-all"
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <div className="ml-auto">
           <button
             onClick={() => setShowMyList(true)}
-            className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border ${GLASS_BTN}`}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1 transition-opacity hover:opacity-75"
+            style={{ ...S.btn, color: C.amber }}
           >
             <List className="size-3.5" />
             My List
             {savedCards.length > 0 && (
-              <span className="bg-violet-400/30 text-violet-800 dark:text-violet-200 border border-violet-300/30 rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+              <span style={{ background:'rgba(255,255,255,0.7)', border:'1px solid rgba(200,160,60,0.4)', borderRadius:'999px', padding:'1px 6px', fontSize:'10px', fontWeight:'700', color: C.amber }}>
                 {savedCards.length}
               </span>
             )}
@@ -342,13 +376,14 @@ export function FlashcardDeck({ onCardChange }) {
 
       {/* ── Topic filter ── */}
       <div className="relative flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0">Topic:</span>
+        <span className="text-xs font-medium shrink-0" style={{ color: C.muted }}>Topic:</span>
         <div className="flex gap-1.5 flex-wrap">
           {topics.map(t => (
             <button
               key={t}
               onClick={() => changeTopic(t)}
-              className={`px-2.5 py-0.5 rounded-full text-xs font-medium border transition-all ${topic === t ? GLASS_ACTIVE : GLASS_BTN}`}
+              style={topic === t ? { ...S.pillOn, color: C.amber } : { ...S.pillOff, color: C.muted }}
+              className="px-2.5 py-0.5 text-xs font-medium transition-all"
             >
               {t}
             </button>
@@ -358,21 +393,22 @@ export function FlashcardDeck({ onCardChange }) {
 
       {/* ── Mode toggle ── */}
       <div className="relative flex items-center gap-2">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0">Mode:</span>
+        <span className="text-xs font-medium shrink-0" style={{ color: C.muted }}>Mode:</span>
         <div className="flex gap-1.5">
           <button
             onClick={() => eqMode && toggleEqMode()}
-            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${!eqMode ? GLASS_ACTIVE : GLASS_BTN}`}
+            style={!eqMode ? { ...S.pillOn, color: C.amber } : { ...S.pillOff, color: C.muted }}
+            className="px-3 py-1 text-xs font-semibold transition-all"
           >
             Definitions
           </button>
           <button
             onClick={() => !eqMode && toggleEqMode()}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-              eqMode
-                ? 'bg-violet-400/20 border-violet-300/40 text-violet-800 dark:text-violet-200 shadow-[0_0_10px_rgba(167,139,250,0.2)] backdrop-blur-sm'
-                : GLASS_BTN
-            }`}
+            style={eqMode
+              ? { ...S.pillOn, color:'#4C1D95', background:'rgba(237,233,254,0.75)', border:'1px solid rgba(196,181,253,0.7)' }
+              : { ...S.pillOff, color: C.muted }
+            }
+            className="flex items-center gap-1 px-3 py-1 text-xs font-semibold transition-all"
           >
             <Calculator className="size-3" />
             Equation practice
@@ -381,84 +417,67 @@ export function FlashcardDeck({ onCardChange }) {
       </div>
 
       {/* ── Progress + stats ── */}
-      <div className="relative flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-        <span>Card {total > 0 ? index + 1 : 0} of {total}{eqMode ? ' (equations)' : ''}</span>
+      <div className="relative flex items-center justify-between text-xs">
+        <span style={{ color: C.muted }}>Card {total > 0 ? index + 1 : 0} of {total}{eqMode ? ' (equations)' : ''}</span>
         <div className="flex gap-3">
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium">{knownCount} Got it</span>
-          <span className="text-amber-600 dark:text-amber-400 font-medium">{studyCount} Still learning</span>
+          <span style={{ color:'#166534', fontWeight:600 }}>{knownCount} Got it</span>
+          <span style={{ color:'#92400E', fontWeight:600 }}>{studyCount} Still learning</span>
         </div>
         <button
           onClick={handleReset}
-          className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          className="flex items-center gap-1 transition-opacity hover:opacity-60"
+          style={{ color: C.muted }}
         >
           <RefreshCw className="size-3" />
           Reset
         </button>
       </div>
 
-      <div className="relative w-full bg-white/15 rounded-full h-1.5 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-violet-400/80 to-slate-400/60 transition-all duration-300 rounded-full"
-          style={{ width: total > 0 ? `${((index + 1) / total) * 100}%` : '0%' }}
-        />
+      <div className="relative" style={S.track}>
+        <div style={{ ...S.fill, width: total > 0 ? `${((index + 1) / total) * 100}%` : '0%' }} />
       </div>
 
       {/* ── Card + nav ── */}
       {total === 0 ? (
-        <div className={`relative flex items-center justify-center rounded-2xl border ${GLASS_CARD} text-center p-8`} style={{ minHeight: '200px' }}>
-          <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-line">
+        <div className="relative flex items-center justify-center text-center p-8" style={{ ...S.card, minHeight:'200px' }}>
+          <p className="text-sm whitespace-pre-line" style={{ color: C.muted }}>
             {eqMode ? 'No equation cards in this filter.\nTry a different difficulty or topic.' : 'No cards match this filter.'}
           </p>
         </div>
       ) : (
         <div className="relative flex items-center gap-3 w-full">
 
-          {/* Prev button */}
+          {/* Prev */}
           <button
             onClick={goPrev}
-            className={`shrink-0 size-8 flex items-center justify-center rounded-xl border ${GLASS_BTN}`}
+            className="shrink-0 size-8 flex items-center justify-center transition-opacity hover:opacity-70"
+            style={{ ...S.btn, borderRadius:'50%', padding:0 }}
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4" style={{ color: C.amber }} />
           </button>
 
-          {/* ── Equation practice card ── */}
+          {/* ── Equation card ── */}
           {eqMode ? (
-            <div
-              className={`flex-1 flex flex-col items-center justify-center gap-3 rounded-2xl border ${GLASS_CARD} p-5`}
-              style={{ minHeight: '220px' }}
-            >
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-5" style={{ ...S.card, minHeight:'220px' }}>
               <div className="flex items-center gap-2">
                 <Badge className={`text-xs font-medium ${categoryColor}`} variant="outline">{card.category}</Badge>
                 {card.generated && (
-                  <Badge className="text-xs bg-violet-300/15 border-violet-300/25 text-violet-700 dark:text-violet-300" variant="outline">
+                  <Badge className="text-xs bg-amber-200/50 border-amber-300/50 text-amber-900" variant="outline">
                     <Sparkles className="size-2.5 mr-1" />AI
                   </Badge>
                 )}
               </div>
 
-              <p className="text-lg font-semibold text-center text-slate-800 dark:text-slate-100">{card.front}</p>
+              <p className="text-lg font-bold text-center" style={{ color: C.heading }}>{card.front}</p>
 
               {/* Equation with blank */}
-              <div className="flex flex-wrap items-center justify-center gap-1 text-sm font-medium">
+              <div className="flex flex-wrap items-center justify-center gap-1 text-sm font-semibold">
                 {eqTokens.map((t, i) => {
                   if (i === blankTokenIdx) {
-                    return (
-                      <span
-                        key={i}
-                        className={`px-3 py-0.5 rounded-md border-b-2 min-w-[70px] text-center transition-all ${
-                          !answerChecked
-                            ? 'bg-white/10 border-violet-400/50 text-slate-400'
-                            : answerCorrect
-                            ? 'bg-emerald-400/15 border-emerald-400 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-rose-400/15 border-rose-400 text-rose-600 dark:text-rose-300 line-through'
-                        }`}
-                      >
-                        {answerChecked ? (userAnswer || '?') : '___'}
-                      </span>
-                    );
+                    return <span key={i} style={blankSlotStyle}>{answerChecked ? (userAnswer || '?') : '___'}</span>;
                   }
-                  if (EQ_OPS.has(t)) return <span key={i} className="text-slate-400 dark:text-slate-500 font-bold px-0.5">{t}</span>;
-                  return <span key={i} className="text-slate-700 dark:text-slate-200">{t}</span>;
+                  if (EQ_OPS.has(t)) return <span key={i} style={{ color: C.muted, fontWeight:700, padding:'0 2px' }}>{t}</span>;
+                  return <span key={i} style={{ color: C.heading }}>{t}</span>;
                 })}
               </div>
 
@@ -470,114 +489,122 @@ export function FlashcardDeck({ onCardChange }) {
                     onChange={e => setUserAnswer(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && userAnswer.trim() && handleCheckAnswer()}
                     placeholder="Fill in the blank…"
-                    className="flex-1 px-3 py-1.5 text-sm rounded-xl border bg-white/20 dark:bg-white/10 border-white/30 backdrop-blur-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-violet-400/40"
+                    style={{
+                      flex:1, background:'rgba(255,255,255,0.55)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
+                      border:'none', borderBottom:'2px solid rgba(200,160,60,0.45)', borderRadius:'10px', outline:'none',
+                      padding:'7px 12px', fontSize:'13px', color: C.heading,
+                    }}
+                    className="placeholder:text-[rgba(80,60,0,0.35)]"
                     autoFocus
                   />
                   <button
                     onClick={handleCheckAnswer}
                     disabled={!userAnswer.trim()}
-                    className="px-4 py-1.5 text-xs font-semibold rounded-xl border bg-white/20 border-white/30 text-slate-700 dark:text-slate-200 hover:bg-white/30 backdrop-blur-sm transition-colors disabled:opacity-40"
+                    className="px-4 py-1.5 text-xs font-semibold transition-opacity disabled:opacity-40"
+                    style={{ ...S.btn, color: C.amber }}
                   >
                     Check
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-1 text-center">
-                  <p className={`text-sm font-semibold ${answerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                  <p className="text-sm font-semibold" style={{ color: answerCorrect ? '#065F46' : '#9F1239' }}>
                     {answerCorrect ? '✓ Correct!' : `✗ Answer: "${correctAnswer}"`}
                   </p>
                   {!answerCorrect && (
-                    <p className="text-xs text-slate-400">Full: {equation}</p>
+                    <p className="text-xs" style={{ color: C.muted }}>Full: {equation}</p>
                   )}
                 </div>
               )}
             </div>
 
           ) : (
-            /* ── Standard flip card ── */
+            /* ── Flip card ── */
             <div
               className="flex-1 cursor-pointer"
-              style={{ perspective: '1000px', height: '220px' }}
+              style={{ perspective:'1000px', height:'220px' }}
               onClick={handleFlip}
             >
-              <div
-                style={{
-                  position: 'relative', width: '100%', height: '100%',
-                  transformStyle: 'preserve-3d',
-                  transition: 'transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1)',
-                  transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                }}
-              >
+              <div style={{
+                position:'relative', width:'100%', height:'100%',
+                transformStyle:'preserve-3d',
+                transition:'transform 0.45s cubic-bezier(0.4,0.2,0.2,1)',
+                transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              }}>
                 {/* Front */}
                 <div
-                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-                  className={`absolute inset-0 rounded-2xl border ${GLASS_CARD} flex flex-col items-center justify-center gap-3 p-6`}
+                  style={{ ...S.card, backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden' }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6"
                 >
                   <div className="flex items-center gap-2">
                     <Badge className={`text-xs font-medium ${categoryColor}`} variant="outline">{card.category}</Badge>
                     {card.generated && (
-                      <Badge className="text-xs bg-violet-300/15 border-violet-300/25 text-violet-700 dark:text-violet-300" variant="outline">
+                      <Badge className="text-xs bg-amber-200/50 border-amber-300/50 text-amber-900" variant="outline">
                         <Sparkles className="size-2.5 mr-1" />AI
                       </Badge>
                     )}
                   </div>
-                  <p className="text-2xl font-semibold text-center leading-snug text-slate-800 dark:text-slate-100">{card.front}</p>
-                  <p className="text-xs text-slate-400">Click to flip</p>
+                  <p className="text-2xl font-bold text-center leading-snug" style={{ color: C.heading }}>{card.front}</p>
+                  <p className="text-xs" style={{ color: C.muted }}>Click to flip</p>
                 </div>
 
                 {/* Back */}
                 <div
-                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                  className={`absolute inset-0 rounded-2xl border ${GLASS_CARD} flex flex-col items-center justify-center gap-2 p-6 overflow-y-auto`}
+                  style={{ ...S.card, backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', transform:'rotateY(180deg)' }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 overflow-y-auto"
                 >
-                  <p className="text-sm text-center leading-relaxed whitespace-pre-line text-slate-700 dark:text-slate-200">{card.back}</p>
+                  <p className="text-sm text-center leading-relaxed whitespace-pre-line" style={{ color: C.body }}>{card.back}</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Next button */}
+          {/* Next */}
           <button
             onClick={goNext}
-            className={`shrink-0 size-8 flex items-center justify-center rounded-xl border ${GLASS_BTN}`}
+            className="shrink-0 size-8 flex items-center justify-center transition-opacity hover:opacity-70"
+            style={{ ...S.btn, borderRadius:'50%', padding:0 }}
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-4" style={{ color: C.amber }} />
           </button>
         </div>
       )}
 
-      {/* ── Action buttons — always visible (equation mode: only after checking) ── */}
+      {/* ── Action buttons ── */}
       {total > 0 && (!eqMode || answerChecked) && (
         <div className="relative flex gap-2 justify-center flex-wrap">
           <button
             onClick={handleStudyMore}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border ${
-              cardStatus === 'studying' ? 'bg-amber-400/20 border-amber-300/40 text-amber-700 dark:text-amber-300 backdrop-blur-sm' : GLASS_BTN
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
+            style={cardStatus === 'studying' ? { ...btnStudying, color:'#92400E' } : { ...S.btn, color: C.body }}
           >
-            <RotateCcw className="size-3.5 text-amber-500" />
+            <RotateCcw className="size-3.5" style={{ color:'#D97706' }} />
             Still learning
           </button>
           <button
             onClick={handleKnow}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border ${
-              cardStatus === 'known' ? 'bg-emerald-400/20 border-emerald-300/40 text-emerald-700 dark:text-emerald-300 backdrop-blur-sm' : GLASS_BTN
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
+            style={cardStatus === 'known' ? { ...btnKnown, color:'#065F46' } : { ...S.btn, color: C.body }}
           >
-            <Check className="size-3.5 text-emerald-500" />
+            <Check className="size-3.5" style={{ color:'#10B981' }} />
             Got it!
           </button>
           <button
             onClick={handleSave}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border transition-all ${
-              isSaved ? 'bg-violet-400/20 border-violet-300/40 text-violet-700 dark:text-violet-300 backdrop-blur-sm' : GLASS_BTN
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
+            style={isSaved ? { ...btnSaved, color:'#4C1D95' } : { ...S.btn, color: C.body }}
           >
-            {isSaved ? <BookmarkCheck className="size-3.5 text-violet-500" /> : <BookmarkPlus className="size-3.5 text-violet-400" />}
+            {isSaved
+              ? <BookmarkCheck className="size-3.5" style={{ color:'#7C3AED' }} />
+              : <BookmarkPlus className="size-3.5" style={{ color:'#7C3AED' }} />}
             {isSaved ? 'Saved!' : 'Save to my list'}
           </button>
           {eqMode && (
-            <button onClick={goNext} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border ${GLASS_BTN}`}>
+            <button
+              onClick={goNext}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
+              style={{ ...S.btn, color: C.amber }}
+            >
               Next →
             </button>
           )}
@@ -589,15 +616,14 @@ export function FlashcardDeck({ onCardChange }) {
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className={`flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-xl border transition-all ${
-            generating ? 'opacity-50 cursor-not-allowed ' + GLASS_BTN : GLASS_BTN
-          } text-violet-600 dark:text-violet-300`}
+          className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-40"
+          style={{ ...S.btn, color: C.amber }}
         >
           <Sparkles className="size-3.5" />
           {generating ? 'Generating…' : 'Generate more cards'}
         </button>
         {generateMsg && (
-          <p className={`text-xs ${generateMsg.startsWith('✓') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+          <p className="text-xs" style={{ color: generateMsg.startsWith('✓') ? '#166534' : '#9F1239' }}>
             {generateMsg}
           </p>
         )}
