@@ -26,7 +26,14 @@ const VALID_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
 const S = {
   container: {
-    background: 'linear-gradient(140deg, #F6F9FF 0%, #EBF1FF 55%, #DFE9FF 100%)',
+    background: `
+      radial-gradient(ellipse 65% 55% at 10% 25%, #BFCFFF 0%, transparent 70%),
+      radial-gradient(ellipse 45% 60% at 90% 70%, #C8D8FF 0%, transparent 65%),
+      radial-gradient(ellipse 50% 40% at 55% 10%, #D5E3FF 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 40% 90%, #DCE9FF 0%, transparent 65%),
+      radial-gradient(ellipse 35% 35% at 80% 30%, #E8F0FF 0%, transparent 55%),
+      #F0F6FF
+    `,
   },
   card: {
     background: 'rgba(255,255,255,0.35)',
