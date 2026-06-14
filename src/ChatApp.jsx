@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -260,7 +260,16 @@ export default function ChatApp() {
 
   // Prompt mode state — null means no scenario chosen yet
   const [promptKey, setPromptKey] = useState(() => localStorage.getItem('chatapp_prompt_mode') || null);
-  const activeSystemPrompt = promptKey ? (SYSTEM_PROMPTS[promptKey]?.prompt || SYSTEM_PROMPT) : null;
+  const [currentFlashcard, setCurrentFlashcard] = useState(null);
+
+  const activeSystemPrompt = useMemo(() => {
+    if (!promptKey) return null;
+    const base = SYSTEM_PROMPTS[promptKey]?.prompt || SYSTEM_PROMPT;
+    if (promptKey === 'flashcard-definitions' && currentFlashcard) {
+      return `${base}\n\n---\nThe student is currently looking at this flashcard:\nTerm: ${currentFlashcard.front}\nDefinition: ${currentFlashcard.back}\nCategory: ${currentFlashcard.category}\n\nIf the student asks about "this card", "this term", or "explain this", refer to the card above.`;
+    }
+    return base;
+  }, [promptKey, currentFlashcard]);
   const activeSuggestedPrompts = promptKey ? (SUGGESTED_PROMPTS_BY_MODE[promptKey] || SUGGESTED_PROMPTS_BY_MODE[DEFAULT_PROMPT_KEY]) : [];
   const scenarioChosen = promptKey !== null;
 
@@ -1101,7 +1110,7 @@ export default function ChatApp() {
           </header>
 
           {/* Flashcard deck — only shown in flashcard scenario */}
-          {promptKey === 'flashcard-definitions' && <FlashcardDeck />}
+          {promptKey === 'flashcard-definitions' && <FlashcardDeck onCardChange={setCurrentFlashcard} />}
 
           {/* Conversation Area */}
           <div className="flex-1 min-h-0 overflow-hidden">

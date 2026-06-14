@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, RotateCcw, Check, RefreshCw, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Check, RefreshCw, Sparkles, BookmarkPlus, BookmarkCheck, List, ArrowLeft } from 'lucide-react';
 import { FLASHCARDS } from '@/utils/flashcards';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
@@ -24,16 +24,18 @@ const CATEGORY_COLORS = {
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
-export function FlashcardDeck() {
+export function FlashcardDeck({ onCardChange }) {
   const [difficulty, setDifficulty]       = useState('easy');
   const [topic, setTopic]                 = useState('All');
   const [index, setIndex]                 = useState(0);
   const [flipped, setFlipped]             = useState(false);
   const [known, setKnown]                 = useState({});
   const [studying, setStudying]           = useState({});
+  const [saved, setSaved]                 = useState({});
   const [generatedCards, setGeneratedCards] = useState([]);
   const [generating, setGenerating]       = useState(false);
   const [generateMsg, setGenerateMsg]     = useState('');
+  const [showMyList, setShowMyList]       = useState(false);
 
   // Merge static + AI-generated cards
   const allCards = useMemo(() => [...FLASHCARDS, ...generatedCards], [generatedCards]);
@@ -53,10 +55,19 @@ export function FlashcardDeck() {
     [byDifficulty, topic]
   );
 
+  const savedCards = useMemo(
+    () => allCards.filter(c => saved[c.id]),
+    [allCards, saved]
+  );
+
   const card        = deck[index] ?? null;
   const total       = deck.length;
   const knownCount  = deck.filter(c => known[c.id]).length;
   const studyCount  = deck.filter(c => studying[c.id]).length;
+
+  useEffect(() => {
+    onCardChange?.(card);
+  }, [card, onCardChange]);
 
   const changeDifficulty = useCallback((d) => {
     setDifficulty(d); setTopic('All'); setFlipped(false); setIndex(0);
@@ -91,6 +102,20 @@ export function FlashcardDeck() {
     setKnown(s => { const n = { ...s }; delete n[card.id]; return n; });
     goNext();
   }, [card, goNext]);
+
+  const handleSave = useCallback(() => {
+    if (!card) return;
+    setSaved(s => {
+      const n = { ...s };
+      if (n[card.id]) delete n[card.id];
+      else n[card.id] = true;
+      return n;
+    });
+  }, [card]);
+
+  const handleRemoveFromList = useCallback((id) => {
+    setSaved(s => { const n = { ...s }; delete n[id]; return n; });
+  }, []);
 
   const handleReset = useCallback(() => {
     setIndex(0); setFlipped(false); setKnown({}); setStudying({});
@@ -164,7 +189,6 @@ Rules:
       try {
         parsed = JSON.parse(jsonStr);
       } catch {
-        // Last resort: find the first { ... } block
         const m = content.match(/\{[\s\S]*\}/);
         if (!m) throw new Error('Could not read the AI response. Try again.');
         parsed = JSON.parse(m[0]);
@@ -184,7 +208,6 @@ Rules:
 
       if (!newCards.length) throw new Error('No usable cards in the response. Try again.');
 
-      // Jump to the first new card after state updates
       const firstNewIdx = deck.length;
       setGeneratedCards(prev => [...prev, ...newCards]);
       setFlipped(false);
@@ -201,7 +224,63 @@ Rules:
 
   const categoryColor = card ? (CATEGORY_COLORS[card.category] ?? 'bg-muted text-muted-foreground') : '';
   const cardStatus    = card ? (known[card.id] ? 'known' : studying[card.id] ? 'studying' : null) : null;
+  const isSaved       = card ? !!saved[card.id] : false;
 
+  // ── My List view ──────────────────────────────────────────────────────────
+  if (showMyList) {
+    return (
+      <div className="flex flex-col gap-3 px-6 py-4 border-b bg-muted/20">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowMyList(false)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="size-4" />
+            Back to flashcards
+          </button>
+          <span className="text-xs text-muted-foreground">{savedCards.length} saved</span>
+        </div>
+
+        <h3 className="text-sm font-semibold">My Vocab List</h3>
+
+        {savedCards.length === 0 ? (
+          <div className="flex items-center justify-center rounded-xl border bg-card py-10">
+            <p className="text-sm text-muted-foreground">No cards saved yet. Hit "Save to my list" on any card!</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-1">
+            {savedCards.map(c => (
+              <div key={c.id} className="rounded-xl border bg-card p-4 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{c.front}</span>
+                    <Badge className={`text-xs ${CATEGORY_COLORS[c.category] ?? 'bg-muted text-muted-foreground'}`} variant="outline">
+                      {c.category}
+                    </Badge>
+                    {c.generated && (
+                      <Badge className="text-xs bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" variant="outline">
+                        <Sparkles className="size-2.5 mr-1" />AI
+                      </Badge>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleRemoveFromList(c.id)}
+                    className="text-xs text-muted-foreground hover:text-red-500 transition-colors shrink-0"
+                    title="Remove from list"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{c.back}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Main deck view ────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-3 px-6 py-4 border-b bg-muted/20 select-none">
 
@@ -222,6 +301,15 @@ Rules:
               </button>
             );
           })}
+        </div>
+        <div className="ml-auto">
+          <button
+            onClick={() => setShowMyList(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <List className="size-3.5" />
+            My List {savedCards.length > 0 && <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] font-semibold">{savedCards.length}</span>}
+          </button>
         </div>
       </div>
 
@@ -338,30 +426,38 @@ Rules:
         </div>
       )}
 
-      {/* ── Got it / Still learning ── */}
-      <div
-        className="flex gap-3 justify-center transition-opacity duration-200"
-        style={{ opacity: flipped && total > 0 ? 1 : 0, pointerEvents: flipped && total > 0 ? 'auto' : 'none' }}
-      >
-        <Button
-          size="sm"
-          variant={cardStatus === 'studying' ? 'secondary' : 'outline'}
-          onClick={handleStudyMore}
-          className="gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950"
-        >
-          <RotateCcw className="size-3.5" />
-          Still learning
-        </Button>
-        <Button
-          size="sm"
-          variant={cardStatus === 'known' ? 'secondary' : 'outline'}
-          onClick={handleKnow}
-          className="gap-1.5 text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950"
-        >
-          <Check className="size-3.5" />
-          Got it!
-        </Button>
-      </div>
+      {/* ── Action buttons — always visible ── */}
+      {total > 0 && (
+        <div className="flex gap-2 justify-center flex-wrap">
+          <Button
+            size="sm"
+            variant={cardStatus === 'studying' ? 'secondary' : 'outline'}
+            onClick={handleStudyMore}
+            className="gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950"
+          >
+            <RotateCcw className="size-3.5" />
+            Still learning
+          </Button>
+          <Button
+            size="sm"
+            variant={cardStatus === 'known' ? 'secondary' : 'outline'}
+            onClick={handleKnow}
+            className="gap-1.5 text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950"
+          >
+            <Check className="size-3.5" />
+            Got it!
+          </Button>
+          <Button
+            size="sm"
+            variant={isSaved ? 'secondary' : 'outline'}
+            onClick={handleSave}
+            className={`gap-1.5 transition-colors ${isSaved ? 'text-blue-600 border-blue-400 bg-blue-50 dark:bg-blue-950' : 'text-blue-500 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950'}`}
+          >
+            {isSaved ? <BookmarkCheck className="size-3.5" /> : <BookmarkPlus className="size-3.5" />}
+            {isSaved ? 'Saved!' : 'Save to my list'}
+          </Button>
+        </div>
+      )}
 
       {/* ── Generate button ── */}
       <div className="flex flex-col items-center gap-1.5">
