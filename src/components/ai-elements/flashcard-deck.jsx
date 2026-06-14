@@ -8,16 +8,16 @@ import { FLASHCARDS } from '@/utils/flashcards';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
-const DIFFICULTY_ACTIVE_TEXT = { easy: '#166534', medium: '#92400E', hard: '#9F1239' };
+const DIFFICULTY_ACTIVE_TEXT = { easy: '#1B4F9B', medium: '#1B4F9B', hard: '#1B4F9B' };
 
 const CATEGORY_COLORS = {
-  'Income Statement':       'bg-sky-200/50 border-sky-300/50 text-sky-900',
-  'Balance Sheet':          'bg-purple-200/50 border-purple-300/50 text-purple-900',
-  'Strategic Profit Model': 'bg-amber-200/50 border-amber-300/50 text-amber-900',
-  'Retail Metrics':         'bg-rose-200/50 border-rose-300/50 text-rose-900',
-  'Liquidity':              'bg-teal-200/50 border-teal-300/50 text-teal-900',
-  'Leverage':               'bg-orange-200/50 border-orange-300/50 text-orange-900',
-  'Advanced Financials':    'bg-indigo-200/50 border-indigo-300/50 text-indigo-900',
+  'Income Statement':       'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Balance Sheet':          'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Strategic Profit Model': 'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Retail Metrics':         'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Liquidity':              'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Leverage':               'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
+  'Advanced Financials':    'bg-blue-50 border-blue-200/80 text-[#1B4F9B]',
 };
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_COLORS);
@@ -26,7 +26,7 @@ const VALID_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
 const S = {
   container: {
-    background: 'linear-gradient(145deg, #FFF8E7 0%, #FFE8A3 40%, #FCECC8 100%)',
+    background: 'linear-gradient(140deg, #F6F9FF 0%, #EBF1FF 55%, #DFE9FF 100%)',
   },
   card: {
     background: 'rgba(255,255,255,0.35)',
@@ -34,7 +34,7 @@ const S = {
     WebkitBackdropFilter: 'blur(28px)',
     border: '1px solid rgba(255,255,255,0.6)',
     borderRadius: '32px',
-    boxShadow: '0 8px 32px rgba(180,140,60,0.15), inset 0 1px 0 rgba(255,255,255,0.7)',
+    boxShadow: '0 8px 32px rgba(27,79,155,0.08), inset 0 1px 0 rgba(255,255,255,0.7)',
   },
   pillOn: {
     background: 'rgba(255,255,255,0.7)',
@@ -42,18 +42,18 @@ const S = {
     borderRadius: '999px',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    boxShadow: '0 2px 8px rgba(180,140,60,0.1)',
+    boxShadow: '0 2px 8px rgba(27,79,155,0.08)',
   },
   pillOff: {
     background: 'transparent',
-    border: '1px solid rgba(200,160,60,0.2)',
+    border: '1px solid rgba(123,159,224,0.3)',
     borderRadius: '999px',
   },
   btn: {
     background: 'rgba(255,255,255,0.5)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(200,160,60,0.3)',
+    border: '1px solid rgba(123,159,224,0.4)',
     borderRadius: '999px',
   },
   track: {
@@ -63,19 +63,19 @@ const S = {
     overflow: 'hidden',
   },
   fill: {
-    background: 'linear-gradient(90deg, #F59E0B, #D97706)',
+    background: '#1B4F9B',
     height: '100%',
     transition: 'width 0.3s ease',
     borderRadius: '999px',
   },
 };
 
-// Warm text color palette
+// Cool blue text palette
 const C = {
-  heading: '#3D2C00',
-  body:    'rgba(80,60,0,0.85)',
-  muted:   'rgba(80,60,0,0.5)',
-  amber:   '#92400E',
+  heading: '#1A2A4A',
+  body:    'rgba(20,40,90,0.85)',
+  muted:   'rgba(20,40,90,0.5)',
+  amber:   '#1B4F9B',  // primary accent (replaces warm amber throughout)
 };
 
 // ── Equation utilities ─────────────────────────────────────────────────────
@@ -127,9 +127,9 @@ function normalizeAns(s) {
 function Orbs() {
   return (
     <>
-      <div aria-hidden style={{ position:'absolute', top:'-30px', right:'-20px', width:'160px', height:'160px', background:'rgba(251,191,36,0.22)', borderRadius:'50%', filter:'blur(48px)', pointerEvents:'none' }} />
-      <div aria-hidden style={{ position:'absolute', bottom:'-20px', left:'-20px', width:'120px', height:'120px', background:'rgba(245,158,11,0.18)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
-      <div aria-hidden style={{ position:'absolute', top:'45%', left:'35%', width:'90px', height:'90px', background:'rgba(252,211,77,0.13)', borderRadius:'50%', filter:'blur(36px)', pointerEvents:'none' }} />
+      <div aria-hidden style={{ position:'absolute', top:'-30px', right:'-20px', width:'160px', height:'160px', background:'rgba(27,79,155,0.1)', borderRadius:'50%', filter:'blur(48px)', pointerEvents:'none' }} />
+      <div aria-hidden style={{ position:'absolute', bottom:'-20px', left:'-20px', width:'120px', height:'120px', background:'rgba(123,159,224,0.12)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
+      <div aria-hidden style={{ position:'absolute', top:'45%', left:'35%', width:'90px', height:'90px', background:'rgba(27,79,155,0.07)', borderRadius:'50%', filter:'blur(36px)', pointerEvents:'none' }} />
     </>
   );
 }
@@ -267,15 +267,15 @@ export function FlashcardDeck({ onCardChange }) {
   const isSaved       = card ? !!saved[card.id] : false;
 
   // Action button style variants
-  const btnStudying = { ...S.btn, background:'rgba(255,248,235,0.75)', border:'1px solid rgba(217,119,6,0.4)' };
-  const btnKnown    = { ...S.btn, background:'rgba(236,253,245,0.75)', border:'1px solid rgba(16,185,129,0.4)' };
-  const btnSaved    = { ...S.btn, background:'rgba(245,243,255,0.75)', border:'1px solid rgba(139,92,246,0.4)' };
+  const btnStudying = { ...S.btn, background:'rgba(123,159,224,0.15)', border:'1px solid rgba(123,159,224,0.4)' };
+  const btnKnown    = { ...S.btn, background:'rgba(219,234,254,0.5)',  border:'1px solid rgba(27,79,155,0.3)' };
+  const btnSaved    = { ...S.btn, background:'rgba(219,234,254,0.5)',  border:'1px solid rgba(27,79,155,0.3)' };
 
   // Equation blank slot styles
   const blankSlotStyle = !answerChecked
-    ? { background:'rgba(255,255,255,0.4)', borderBottom:'2px solid rgba(200,160,60,0.5)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'rgba(80,60,0,0.3)', transition:'all 0.2s' }
+    ? { background:'rgba(255,255,255,0.4)', borderBottom:'2px solid rgba(123,159,224,0.5)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'rgba(20,40,90,0.3)', transition:'all 0.2s' }
     : answerCorrect
-    ? { background:'rgba(209,250,229,0.6)', border:'2px solid rgba(16,185,129,0.5)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'#065F46' }
+    ? { background:'rgba(219,234,254,0.6)', border:'2px solid rgba(27,79,155,0.4)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'#1B4F9B' }
     : { background:'rgba(254,226,226,0.6)', border:'2px solid rgba(239,68,68,0.45)', borderRadius:'6px', padding:'2px 16px', minWidth:'70px', textAlign:'center', display:'inline-block', color:'#9F1239', textDecoration:'line-through' };
 
   // ── My List view ────────────────────────────────────────────────────────
@@ -314,7 +314,7 @@ export function FlashcardDeck({ onCardChange }) {
                       {c.category}
                     </Badge>
                     {c.generated && (
-                      <Badge className="text-xs bg-amber-200/50 border-amber-300/50 text-amber-900" variant="outline">
+                      <Badge className="text-xs bg-blue-50 border-blue-200/80 text-[#1B4F9B]" variant="outline">
                         <Sparkles className="size-2.5 mr-1" />AI
                       </Badge>
                     )}
@@ -405,7 +405,7 @@ export function FlashcardDeck({ onCardChange }) {
           <button
             onClick={() => !eqMode && toggleEqMode()}
             style={eqMode
-              ? { ...S.pillOn, color:'#4C1D95', background:'rgba(237,233,254,0.75)', border:'1px solid rgba(196,181,253,0.7)' }
+              ? { ...S.pillOn, color:'#1B4F9B', background:'rgba(27,79,155,0.12)', border:'1px solid rgba(27,79,155,0.4)' }
               : { ...S.pillOff, color: C.muted }
             }
             className="flex items-center gap-1 px-3 py-1 text-xs font-semibold transition-all"
@@ -420,13 +420,13 @@ export function FlashcardDeck({ onCardChange }) {
       <div className="relative flex items-center justify-between text-xs">
         <span style={{ color: C.muted }}>Card {total > 0 ? index + 1 : 0} of {total}{eqMode ? ' (equations)' : ''}</span>
         <div className="flex gap-3">
-          <span style={{ color:'#166534', fontWeight:600 }}>{knownCount} Got it</span>
-          <span style={{ color:'#92400E', fontWeight:600 }}>{studyCount} Still learning</span>
+          <span style={{ color:'#1B4F9B', fontWeight:600 }}>{knownCount} Got it</span>
+          <span style={{ color:'#7B9FE0', fontWeight:600 }}>{studyCount} Still learning</span>
         </div>
         <button
           onClick={handleReset}
           className="flex items-center gap-1 transition-opacity hover:opacity-60"
-          style={{ color: C.muted }}
+          style={{ color: '#7B9FE0' }}
         >
           <RefreshCw className="size-3" />
           Reset
@@ -491,7 +491,7 @@ export function FlashcardDeck({ onCardChange }) {
                     placeholder="Fill in the blank…"
                     style={{
                       flex:1, background:'rgba(255,255,255,0.55)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
-                      border:'none', borderBottom:'2px solid rgba(200,160,60,0.45)', borderRadius:'10px', outline:'none',
+                      border:'none', borderBottom:'2px solid rgba(123,159,224,0.6)', borderRadius:'10px', outline:'none',
                       padding:'7px 12px', fontSize:'13px', color: C.heading,
                     }}
                     className="placeholder:text-[rgba(80,60,0,0.35)]"
@@ -539,7 +539,7 @@ export function FlashcardDeck({ onCardChange }) {
                   <div className="flex items-center gap-2">
                     <Badge className={`text-xs font-medium ${categoryColor}`} variant="outline">{card.category}</Badge>
                     {card.generated && (
-                      <Badge className="text-xs bg-amber-200/50 border-amber-300/50 text-amber-900" variant="outline">
+                      <Badge className="text-xs bg-blue-50 border-blue-200/80 text-[#1B4F9B]" variant="outline">
                         <Sparkles className="size-2.5 mr-1" />AI
                       </Badge>
                     )}
@@ -576,27 +576,27 @@ export function FlashcardDeck({ onCardChange }) {
           <button
             onClick={handleStudyMore}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
-            style={cardStatus === 'studying' ? { ...btnStudying, color:'#92400E' } : { ...S.btn, color: C.body }}
+            style={cardStatus === 'studying' ? { ...btnStudying, color:'#7B9FE0' } : { ...S.btn, color: '#7B9FE0' }}
           >
-            <RotateCcw className="size-3.5" style={{ color:'#D97706' }} />
+            <RotateCcw className="size-3.5" style={{ color:'#7B9FE0' }} />
             Still learning
           </button>
           <button
             onClick={handleKnow}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
-            style={cardStatus === 'known' ? { ...btnKnown, color:'#065F46' } : { ...S.btn, color: C.body }}
+            style={cardStatus === 'known' ? { ...btnKnown, color:'#1B4F9B' } : { ...S.btn, color: C.body }}
           >
-            <Check className="size-3.5" style={{ color:'#10B981' }} />
+            <Check className="size-3.5" style={{ color:'#1B4F9B' }} />
             Got it!
           </button>
           <button
             onClick={handleSave}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-75"
-            style={isSaved ? { ...btnSaved, color:'#4C1D95' } : { ...S.btn, color: C.body }}
+            style={isSaved ? { ...btnSaved, color:'#1B4F9B' } : { ...S.btn, color: C.body }}
           >
             {isSaved
-              ? <BookmarkCheck className="size-3.5" style={{ color:'#7C3AED' }} />
-              : <BookmarkPlus className="size-3.5" style={{ color:'#7C3AED' }} />}
+              ? <BookmarkCheck className="size-3.5" style={{ color:'#1B4F9B' }} />
+              : <BookmarkPlus className="size-3.5" style={{ color:'#1B4F9B' }} />}
             {isSaved ? 'Saved!' : 'Save to my list'}
           </button>
           {eqMode && (
@@ -617,13 +617,13 @@ export function FlashcardDeck({ onCardChange }) {
           onClick={handleGenerate}
           disabled={generating}
           className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-40"
-          style={{ ...S.btn, color: C.amber }}
+          style={{ ...S.btn, color: '#7B9FE0', border:'1px solid rgba(123,159,224,0.5)' }}
         >
           <Sparkles className="size-3.5" />
           {generating ? 'Generating…' : 'Generate more cards'}
         </button>
         {generateMsg && (
-          <p className="text-xs" style={{ color: generateMsg.startsWith('✓') ? '#166534' : '#9F1239' }}>
+          <p className="text-xs" style={{ color: generateMsg.startsWith('✓') ? '#1B4F9B' : '#9F1239' }}>
             {generateMsg}
           </p>
         )}
