@@ -446,7 +446,7 @@ export function FlashcardDeck({ onCardChange }) {
 
       {/* ── Card + nav ── */}
       {total === 0 ? (
-        <div className="relative flex items-center justify-center text-center p-8" style={{ ...S.card, minHeight:'200px' }}>
+        <div className="relative flex items-center justify-center text-center p-8" style={{ ...S.card, minHeight:'160px' }}>
           <p className="text-sm whitespace-pre-line" style={{ color: C.muted }}>
             {eqMode ? 'No equation cards in this filter.\nTry a different difficulty or topic.' : 'No cards match this filter.'}
           </p>
@@ -465,7 +465,7 @@ export function FlashcardDeck({ onCardChange }) {
 
           {/* ── Equation card ── */}
           {eqMode ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-5" style={{ ...S.card, minHeight:'220px' }}>
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-5" style={{ ...S.card, minHeight:'170px' }}>
               <div className="flex items-center gap-2">
                 <Badge className={`text-xs font-medium ${categoryColor}`} variant="outline">{card.category}</Badge>
                 {card.generated && (
@@ -529,7 +529,7 @@ export function FlashcardDeck({ onCardChange }) {
             /* ── Flip card ── */
             <div
               className="flex-1 cursor-pointer"
-              style={{ perspective:'1000px', height:'220px' }}
+              style={{ perspective:'1000px', height:'170px' }}
               onClick={handleFlip}
             >
               <div style={{
