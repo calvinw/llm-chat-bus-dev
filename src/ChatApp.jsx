@@ -765,9 +765,51 @@ export default function ChatApp() {
     const wasActive = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'executing_tools';
     prevStatusRef.current = status;
     if (wasActive && status === 'idle' && messages.length > 0) {
-      saveConversation(messages, currentConversationId).then(id => {
-        if (id && id !== currentConversationId) setCurrentConversationId(id);
-      });
+      (async () => {
+        let titleOverride;
+        if (!currentConversationId) {
+          const key = effectiveApiKey;
+          if (key) {
+            try {
+              const relevant = messages
+                .filter(m => m.role === 'user')
+                .slice(0, 10)
+                .map(m => ({ role: 'user', content: typeof m.content === 'string' ? m.content.slice(0, 300) : '' }));
+               const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                 method: 'POST',
+                 headers: {
+                   'Content-Type': 'application/json',
+                   'Authorization': `Bearer ${key}`,
+                   'HTTP-Referer': window.location.href,
+                   'X-Title': 'FIT Retail Index Chat',
+                 },
+                 body: JSON.stringify({
+                   model: 'openai/gpt-4o-mini',
+                   messages: [
+                      { role: 'system', content: 'Create a very short descriptive title for this business or financial chat based on what the user wants to know or do. Use natural language that someone would recognize quickly in a sidebar. Be specific — mention company names, financial metrics, or tasks. Keep it brief, 3 to 6 words, no longer. Never use generic labels like conversation, question, discussion, chat, or inquiry. Do not use quotes. Do not end with punctuation. Respond with only the title and nothing else.' },
+                     ...relevant,
+                   ],
+                   stream: false,
+                   max_tokens: 25,
+                 }),
+               });
+              if (res.ok) {
+                const data = await res.json();
+                const t = data.choices?.[0]?.message?.content?.trim();
+                if (t) {
+                  const cleaned = t.replace(/^["'\s]+|["'\s]+$/g, '').replace(/[.,!?;:]+$/, '');
+                  titleOverride = cleaned.length > 50 ? cleaned.slice(0, 50).replace(/\s+\S*$/, '') : cleaned;
+                }
+              }
+            } catch (e) {
+              console.warn('Title generation failed:', e);
+            }
+          }
+        }
+        saveConversation(messages, currentConversationId, titleOverride).then(id => {
+          if (id && id !== currentConversationId) setCurrentConversationId(id);
+        });
+      })();
     }
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
