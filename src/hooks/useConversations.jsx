@@ -21,7 +21,10 @@ export function useConversations(user) {
   const saveConversation = useCallback(async (messages, conversationId, titleOverride) => {
     if (!user || messages.length === 0) return conversationId;
     const firstUserMsg = messages.find(m => m.role === 'user');
-    const title = titleOverride || (firstUserMsg?.content || 'New Chat').slice(0, 60);
+    const raw = firstUserMsg?.content || '';
+    const truncated = raw.replace(/[.,!?;:]+$/, '').slice(0, 50).trim();
+    const cleaned = truncated.length === 50 ? truncated.replace(/\s+\S*$/, '') : truncated;
+    const title = titleOverride || cleaned || 'Starting a new chat';
 
     if (!conversationId) {
       const { data } = await supabase
