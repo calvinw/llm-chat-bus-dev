@@ -1,0 +1,9 @@
+[
+  {
+    "command": "roa-analysis-quiz",
+    "label": "ROA Analysis Quiz",
+    "description": "Interactive quiz on Return on Assets and the Strategic Profit Model",
+    "usage": "/roa-analysis-quiz TICKER1 [YEAR1] TICKER2 [YEAR2]",
+    "example": "/roa-analysis-quiz WMT TGT"
+  }
+]

@@ -261,6 +261,41 @@ export default function ChatApp() {
   // Prompt mode state — null means no scenario chosen yet
   const [promptKey, setPromptKey] = useState(() => localStorage.getItem('chatapp_prompt_mode') || null);
   const [currentFlashcard, setCurrentFlashcard] = useState(null);
+  // Active skill prompt — set when a /command is detected, cleared on New Chat or scenario switch
+  const [activeSkillPrompt, setActiveSkillPrompt] = useState(null);
+
+  // Slash command autocomplete
+  const [skills, setSkills] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    fetch('./skills/index.json')
+      .then(r => r.ok ? r.json() : [])
+      .then(setSkills)
+      .catch(() => {});
+  }, []);
+
+  const filteredSkills = useMemo(() => {
+    if (!inputValue.startsWith('/')) return [];
+    const query = inputValue.slice(1).toLowerCase();
+    if (query.includes(' ')) return [];
+    return skills.filter(s =>
+      s.command.toLowerCase().includes(query) ||
+      s.label.toLowerCase().includes(query)
+    );
+  }, [inputValue, skills]);
+
+  const showSuggestions = filteredSkills.length > 0;
+
+  const selectSkill = (skill) => {
+    const newValue = `/${skill.command} `;
+    setInputValue(newValue);
+    if (textareaRef.current) {
+      textareaRef.current.value = newValue;
+      textareaRef.current.focus();
+    }
+  };
 
   const activeSystemPrompt = useMemo(() => {
     if (!promptKey) return null;
@@ -276,6 +311,7 @@ export default function ChatApp() {
   const handlePromptModeChange = (key) => {
     setPromptKey(key);
     localStorage.setItem('chatapp_prompt_mode', key);
+    setActiveSkillPrompt(null);
     clearMessages();
   };
 
@@ -677,20 +713,45 @@ export default function ChatApp() {
     localStorage.setItem('openrouter_model', modelId);
   };
 
+  // Detect /command at the start of a message and load the matching skill file from public/skills/
+  const resolveSkillPrompt = async (text) => {
+    if (!text.startsWith('/')) return null;
+    const commandName = text.trim().split(/\s+/)[0].slice(1); // e.g. "roa-analysis-quiz"
+    try {
+      const res = await fetch(`./skills/${commandName}/${commandName}.md`);
+      if (!res.ok) return null;
+      return await res.text();
+    } catch {
+      return null;
+    }
+  };
+
+  // The system prompt to use: skill overrides scenario, scenario overrides nothing
+  const effectiveSystemPrompt = activeSkillPrompt ?? activeSystemPrompt;
+
   // Handle form submission from PromptInput
   const handleSubmit = async (message) => {
     if (!message.text?.trim()) return;
-    await sendMessage(message.text, { model: selectedModel, systemPrompt: activeSystemPrompt });
+    const skillPrompt = await resolveSkillPrompt(message.text.trim());
+    if (skillPrompt) {
+      setActiveSkillPrompt(skillPrompt);
+      await sendMessage(message.text, { model: selectedModel, systemPrompt: skillPrompt });
+      return;
+    }
+    await sendMessage(message.text, { model: selectedModel, systemPrompt: effectiveSystemPrompt });
   };
 
   // Handle suggested prompt click
   const handleSuggestedPrompt = async (prompt) => {
-    await sendMessage(prompt, { model: selectedModel, systemPrompt: activeSystemPrompt });
+    await sendMessage(prompt, { model: selectedModel, systemPrompt: effectiveSystemPrompt });
   };
 
   // Clear conversation
   const handleClearConversation = () => {
     clearMessages();
+    setActiveSkillPrompt(null);
+    setInputValue('');
+    if (textareaRef.current) textareaRef.current.value = '';
   };
 
   // Export conversation as markdown (detailed)
@@ -1216,10 +1277,29 @@ export default function ChatApp() {
 
           {/* Input Area */}
           <div className="border-t p-4">
+            <div className="relative">
+              {showSuggestions && (
+                <div className="absolute bottom-full mb-2 left-0 right-0 bg-background border rounded-lg shadow-lg overflow-hidden z-50">
+                  {filteredSkills.map((skill) => (
+                    <button
+                      key={skill.command}
+                      className="w-full text-left px-4 py-2.5 hover:bg-muted flex items-center gap-3 border-b last:border-b-0"
+                      onMouseDown={(e) => { e.preventDefault(); selectSkill(skill); }}
+                      type="button"
+                    >
+                      <span className="font-mono text-sm text-primary shrink-0">/{skill.command}</span>
+                      <span className="text-sm text-muted-foreground truncate">{skill.description}</span>
+                      <span className="font-mono text-xs text-muted-foreground/50 ml-auto shrink-0">{skill.example}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
                 <PromptInputTextarea
-                  placeholder={scenarioChosen ? "Type your message..." : "Choose a scenario to start..."}
+                  ref={textareaRef}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={scenarioChosen ? "Type your message... (/ for skills)" : "Choose a scenario to start..."}
                   disabled={!scenarioChosen}
                 />
               </PromptInputBody>
@@ -1232,6 +1312,7 @@ export default function ChatApp() {
                 <PromptInputSubmit status={status} />
               </PromptInputFooter>
             </PromptInput>
+            </div>
           </div>
         </div>
       </Panel>
