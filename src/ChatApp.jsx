@@ -765,7 +765,7 @@ export default function ChatApp() {
     const wasActive = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'executing_tools';
     prevStatusRef.current = status;
     if (wasActive && status === 'idle' && messages.length > 0) {
-      saveConversation(messages, currentConversationId).then(id => {
+      saveConversation(messages, currentConversationId, promptKey).then(id => {
         if (id && id !== currentConversationId) setCurrentConversationId(id);
       });
     }
@@ -838,11 +838,16 @@ export default function ChatApp() {
 
   // Load a past conversation from history
   const handleLoadConversation = async (id) => {
-    const msgs = await loadConversationMessages(id);
-    if (msgs) {
-      loadMessages(msgs);
+    const result = await loadConversationMessages(id);
+    if (result) {
+      loadMessages(result.messages);
       setCurrentConversationId(id);
       setHistoryOpen(false);
+      // Restore the prompt key that was active when this conversation was saved
+      if (result.prompt_key && result.prompt_key !== promptKey) {
+        setPromptKey(result.prompt_key);
+        localStorage.setItem('chatapp_prompt_mode', result.prompt_key);
+      }
     }
   };
 

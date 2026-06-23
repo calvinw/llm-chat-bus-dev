@@ -94,8 +94,24 @@ else
 fi
 echo ""
 echo "  Logs:"
-echo "    tail -f $CHAT_LOG"
-echo "    tail -f $BUSMGMT_LOG"
-echo ""
-echo "  Restart anytime: bash start_servers.sh"
-echo ""
+  echo "    tail -f $CHAT_LOG"
+  echo "    tail -f $BUSMGMT_LOG"
+  echo ""
+  echo "  Restart anytime: bash start_servers.sh"
+  echo ""
+
+# ── Step 4: Make port 3000 public ─────────────────────────────────────────────
+# In GitHub Codespaces, forwarded ports are private by default. Private ports
+# require GitHub auth cookies, which are blocked by the browser when the port
+# is loaded inside a cross-origin iframe (the chat app on port 8081 loads the
+# BusMgmt app on port 3000 in an iframe). Making the port public removes this
+# restriction so the iframe loads correctly.
+if [ -n "$CODESPACE_NAME" ]; then
+  echo ""
+  echo "┄┄┄ Step 4/3: Setting port 3000 to public ┄┄┄"
+  echo "→ Making BusMgmt port publicly accessible for cross-origin iframe..."
+  # Use gh to set port 3000 visibility to public (takes effect immediately)
+  gh codespace ports visibility 3000:public -c "$CODESPACE_NAME" 2>/dev/null && \
+    echo "✓ Port 3000 is now public." || \
+    echo "⚠ Could not set port visibility. The iframe may not load."
+fi

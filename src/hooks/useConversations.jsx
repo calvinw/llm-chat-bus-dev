@@ -18,15 +18,18 @@ export function useConversations(user) {
     setLoadingHistory(false);
   }, [user]);
 
-  const saveConversation = useCallback(async (messages, conversationId) => {
+  const saveConversation = useCallback(async (messages, conversationId, promptKey) => {
     if (!user || messages.length === 0) return conversationId;
     const firstUserMsg = messages.find(m => m.role === 'user');
     const title = (firstUserMsg?.content || 'New Chat').slice(0, 60);
 
+    // Store messages alongside the prompt key so each conversation remembers its mode
+    const stored = { messages, prompt_key: promptKey };
+
     if (!conversationId) {
       const { data } = await supabase
         .from('conversations')
-        .insert({ user_id: user.id, title, messages })
+        .insert({ user_id: user.id, title, messages: stored })
         .select('id')
         .single();
       return data?.id ?? null;
@@ -34,7 +37,7 @@ export function useConversations(user) {
 
     await supabase
       .from('conversations')
-      .update({ messages, updated_at: new Date().toISOString() })
+      .update({ messages: stored, updated_at: new Date().toISOString() })
       .eq('id', conversationId);
     return conversationId;
   }, [user]);
@@ -45,7 +48,13 @@ export function useConversations(user) {
       .select('messages')
       .eq('id', id)
       .single();
-    return data?.messages ?? null;
+    const stored = data?.messages ?? null;
+    if (!stored) return null;
+    // Handle both old format (plain array) and new format ({ messages, prompt_key })
+    if (Array.isArray(stored)) {
+      return { messages: stored, prompt_key: null };
+    }
+    return { messages: stored.messages || [], prompt_key: stored.prompt_key || null };
   }, []);
 
   const renameConversation = useCallback(async (id, newTitle) => {
